@@ -66,6 +66,7 @@ export function Preview({ mode }: PreviewProps) {
                   margin: 0;
                   padding: 1rem;
                   min-height: 100vh;
+                  font-family: system-ui, -apple-system, sans-serif;
                 }
               </style>
             </head>

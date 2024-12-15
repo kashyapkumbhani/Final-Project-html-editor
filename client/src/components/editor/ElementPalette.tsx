@@ -107,29 +107,45 @@ function ElementsList({ type }: { type: string }) {
     // Find and update the element in the parsed HTML
     const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
     if (elementToUpdate) {
+      // Update the text content
       elementToUpdate.textContent = newText;
+      
+      // Preserve all attributes
+      Array.from(elements[index].attributes).forEach(attr => {
+        if (attr.name !== 'contenteditable') {
+          elementToUpdate.setAttribute(attr.name, attr.value);
+        }
+      });
       
       // Update the HTML state with the modified content
       const updatedHtml = doc.documentElement.outerHTML;
       setHtml(updatedHtml);
       
       // Update local elements list for the sidebar
-      const updatedElements = [...elements];
-      updatedElements[index] = elementToUpdate as HTMLElement;
-      setElements(updatedElements);
+      const newElements = [...elements];
+      newElements[index] = elementToUpdate as HTMLElement;
+      setElements(newElements);
       
-      // Set the selected element to highlight it in the preview
+      // Update the preview and highlight the element
       const previewFrame = document.querySelector('iframe');
       if (previewFrame?.contentDocument) {
+        // Remove previous highlights
+        previewFrame.contentDocument.querySelectorAll('.element-highlight').forEach(el => {
+          el.classList.remove('element-highlight');
+        });
+        
+        // Find and highlight the updated element
         const elementInPreview = previewFrame.contentDocument.querySelector(
           `[data-element-id="${elementId}"]`
         ) as HTMLElement;
+        
         if (elementInPreview) {
-          setSelectedElement(elementInPreview);
+          elementInPreview.classList.add('element-highlight');
           elementInPreview.scrollIntoView({
             behavior: 'smooth',
             block: 'center'
           });
+          setSelectedElement(elementInPreview);
         }
       }
     }
