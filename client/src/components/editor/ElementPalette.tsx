@@ -98,17 +98,33 @@ function ElementsList({ type }: { type: string }) {
   };
 
   const handleTextEdit = (index: number, newText: string) => {
-    const updatedElements = [...elements];
-    updatedElements[index].textContent = newText;
+    const elementId = elements[index].getAttribute('data-element-id');
     
+    // Update the preview frame directly for immediate feedback
+    const previewFrame = document.querySelector('iframe');
+    if (previewFrame?.contentDocument) {
+      const elementInPreview = previewFrame.contentDocument.querySelector(
+        `[data-element-id="${elementId}"]`
+      ) as HTMLElement;
+      if (elementInPreview) {
+        elementInPreview.textContent = newText;
+      }
+    }
+    
+    // Update the HTML state
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const elementToUpdate = doc.querySelector(`[data-element-id="${elements[index].getAttribute('data-element-id')}"]`);
+    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
     
     if (elementToUpdate) {
       elementToUpdate.textContent = newText;
       setHtml(doc.documentElement.outerHTML);
     }
+    
+    // Update the elements list
+    const updatedElements = [...elements];
+    updatedElements[index].textContent = newText;
+    setElements(updatedElements);
   };
 
   return (
@@ -116,8 +132,7 @@ function ElementsList({ type }: { type: string }) {
       {elements.map((element, index) => (
         <div key={index} className="flex flex-col gap-2">
           <div
-            className={`p-2 rounded hover:bg-accent cursor-pointer ${editingIndex === index ? 'bg-accent' : ''}`}
-            onClick={() => handleElementClick(element, index)}
+            className="p-2 rounded hover:bg-accent group relative"
             onMouseEnter={() => {
               const previewFrame = document.querySelector('iframe');
               if (previewFrame?.contentDocument) {
@@ -126,6 +141,7 @@ function ElementsList({ type }: { type: string }) {
                 ) as HTMLElement;
                 if (elementInPreview) {
                   elementInPreview.classList.add('element-hover');
+                  elementInPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
               }
             }}
@@ -145,15 +161,17 @@ function ElementsList({ type }: { type: string }) {
               type="text"
               value={element.textContent || ''}
               onChange={(e) => handleTextEdit(index, e.target.value)}
-              className="w-full bg-transparent border-none focus:outline-none text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleElementClick(element, index);
+              }}
+              className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary rounded px-2 py-1 text-sm cursor-text"
               placeholder={`${type} ${index + 1}`}
             />
-          </div>
-          {editingIndex === index && (
-            <div className="text-xs text-muted-foreground pl-2">
-              Click outside to save changes
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
+              Click to edit
             </div>
-          )}
+          </div>
         </div>
       ))}
       {elements.length === 0 && (
