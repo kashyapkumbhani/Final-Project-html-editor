@@ -21,12 +21,11 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 const elementTypes = [
-  { id: "p", icon: Type, label: "Paragraphs" },
-  { id: "h1", icon: Heading1, label: "Heading 1" },
-  { id: "h2", icon: Heading2, label: "Heading 2" },
-  { id: "h3", icon: Heading3, label: "Heading 3" },
-  { id: "button", icon: Square, label: "Buttons" },
-  { id: "img", icon: Image, label: "Images" },
+  { id: "p", icon: Type, label: "Paragraph", tag: "p" },
+  { id: "h1", icon: Heading1, label: "Heading 1", tag: "h1" },
+  { id: "h2", icon: Heading2, label: "Heading 2", tag: "h2" },
+  { id: "h3", icon: Heading3, label: "Heading 3", tag: "h3" },
+  { id: "button", icon: Square, label: "Button", tag: "button" },
 ];
 
 function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any; label: string }) {
@@ -39,7 +38,7 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
   }));
 
   return (
-    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }} className="mb-2">
       <Button
         variant="outline"
         className="flex items-center gap-2 w-full justify-start"
@@ -51,76 +50,74 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
   );
 }
 
-function ElementsList({ type }: { type: string }) {
+function ElementsList({ tag }: { tag: string }) {
   const { html, setHtml } = useEditorStore();
   const [elements, setElements] = useState<HTMLElement[]>([]);
 
-  // Update elements list when HTML changes
   useEffect(() => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const foundElements = Array.from(doc.getElementsByTagName(type));
-    
-    // Ensure all elements have IDs
-    foundElements.forEach((el, index) => {
-      if (!el.getAttribute('data-element-id')) {
-        el.setAttribute('data-element-id', `${type}-${index}`);
-      }
-    });
-    
+    const foundElements = Array.from(doc.getElementsByTagName(tag));
     setElements(foundElements as HTMLElement[]);
-  }, [html, type]);
+  }, [html, tag]);
 
-  // Function to update element text
-  const updateElementText = (elementId: string, newText: string) => {
+  const handleTextChange = (element: HTMLElement, newText: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+    const elementId = element.getAttribute('data-element-id');
     
-    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
-    if (elementToUpdate) {
-      elementToUpdate.textContent = newText;
-      
-      // Update the editor store with new HTML
-      setHtml(doc.documentElement.outerHTML);
-      
-      // Update local elements list
-      const updatedElements = Array.from(doc.getElementsByTagName(type)) as HTMLElement[];
-      setElements(updatedElements);
+    if (elementId) {
+      const targetElement = doc.querySelector(`[data-element-id="${elementId}"]`);
+      if (targetElement) {
+        targetElement.textContent = newText;
+        setHtml(doc.documentElement.outerHTML);
+      }
     }
   };
 
+  if (elements.length === 0) {
+    return (
+      <div className="px-4 py-2 text-sm text-muted-foreground">
+        No {tag} elements found
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2 pl-4">
-      {elements.map((element) => {
-        const elementId = element.getAttribute('data-element-id') || '';
+    <div className="space-y-2 p-2">
+      {elements.map((element, index) => {
+        // Ensure element has a data-element-id
+        if (!element.getAttribute('data-element-id')) {
+          element.setAttribute('data-element-id', `${tag}-${Date.now()}-${index}`);
+        }
         
         return (
-          <div key={elementId} className="flex items-center gap-2 p-2 rounded hover:bg-accent group">
+          <div 
+            key={element.getAttribute('data-element-id')} 
+            className="flex items-center gap-2 p-2 rounded-md hover:bg-accent group"
+          >
             <Input
               value={element.textContent || ''}
-              onChange={(e) => updateElementText(elementId, e.target.value)}
-              className="flex-1 h-8 px-2 text-sm"
-              placeholder={`${type} element`}
+              onChange={(e) => handleTextChange(element, e.target.value)}
+              className="h-8 text-sm"
+              placeholder={`Edit ${tag} text`}
             />
-            <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-              Edit text
-            </span>
           </div>
         );
       })}
-      {elements.length === 0 && (
-        <p className="text-sm text-muted-foreground pl-2">No {type} elements found</p>
-      )}
     </div>
   );
 }
 
 export function ElementPalette() {
   return (
-    <Card className="h-full p-4 overflow-auto">
-      <div className="space-y-4">
+    <Card className="h-full overflow-auto">
+      <div className="p-4">
         <h3 className="font-medium mb-4">Page Elements</h3>
-        <div className="space-y-2">
+        
+        {/* Draggable Elements */}
+        <div className="mb-6">
+          <p className="text-sm text-muted-foreground mb-2">Drag to add new elements</p>
           {elementTypes.map((element) => (
             <DraggableElement
               key={element.id}
@@ -130,8 +127,20 @@ export function ElementPalette() {
             />
           ))}
         </div>
-        {/* Removed Accordion, directly rendering DraggableElements */}
 
+        {/* Existing Elements */}
+        <Accordion type="multiple" className="w-full">
+          {elementTypes.map((element) => (
+            <AccordionItem key={element.id} value={element.id}>
+              <AccordionTrigger className="text-sm">
+                {element.label}s
+              </AccordionTrigger>
+              <AccordionContent>
+                <ElementsList tag={element.tag} />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </Card>
   );
