@@ -30,9 +30,49 @@ export default function Editor() {
   };
 
   const handleFileExport = () => {
-    const currentHtml = useEditorStore.getState().html;
+    // Get the preview iframe to extract the latest HTML
+    const previewFrame = document.querySelector('iframe');
+    if (!previewFrame?.contentDocument) {
+      alert("Error: Could not access preview content");
+      return;
+    }
+
+    // Get all elements from the preview
+    const elements = Array.from(previewFrame.contentDocument.body.children);
     
-    // Create a complete HTML document with styles
+    // Create a temporary container to preserve styles and attributes
+    const tempContainer = document.createElement('div');
+    elements.forEach(el => {
+      const clone = el.cloneNode(true) as HTMLElement;
+      // Remove editor-specific attributes
+      clone.removeAttribute('contenteditable');
+      tempContainer.appendChild(clone);
+    });
+
+    // Get computed styles for each element
+    const styleSheet = new Set<string>();
+    elements.forEach(el => {
+      const computedStyle = window.getComputedStyle(el as HTMLElement);
+      let elementStyles = '';
+      Array.from(computedStyle).forEach(prop => {
+        const value = computedStyle.getPropertyValue(prop);
+        if (value) {
+          elementStyles += `${prop}: ${value};\n`;
+        }
+      });
+      if (elementStyles) {
+        const elementId = (el as HTMLElement).getAttribute('data-element-id');
+        if (elementId) {
+          styleSheet.add(`
+            [data-element-id="${elementId}"] {
+              ${elementStyles}
+            }
+          `);
+        }
+      }
+    });
+
+    // Create the complete HTML document
     const fullHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -47,12 +87,12 @@ export default function Editor() {
             padding: 1rem;
             font-family: system-ui, -apple-system, sans-serif;
         }
-        /* Preserve custom styles from elements */
-        ${Array.from(document.getElementsByTagName('style')).map(style => style.innerHTML).join('\n')}
+        /* Computed styles */
+        ${Array.from(styleSheet).join('\n')}
     </style>
 </head>
 <body>
-    ${currentHtml}
+    ${tempContainer.innerHTML}
 </body>
 </html>`;
 
