@@ -86,7 +86,7 @@ export function VisualEditor() {
           element.className = 'px-4 py-2 bg-blue-500 text-white rounded';
           break;
         case 'input':
-          element = document.createElement('input');
+          element = document.createElement('input') as HTMLInputElement;
           element.placeholder = 'Enter text...';
           element.className = 'px-4 py-2 border rounded';
           break;
@@ -117,9 +117,12 @@ export function VisualEditor() {
   return (
     <Card className="h-full overflow-auto">
       <div 
-        ref={(node) => {
-          drop(node);
-          if (node) editorRef.current = node;
+        ref={node => {
+          const dropRef = drop(node);
+          if (node) {
+            editorRef.current = node;
+          }
+          return dropRef;
         }}
         className="min-h-full p-4"
         data-visual-editor
