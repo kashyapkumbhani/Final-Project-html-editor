@@ -105,36 +105,35 @@ function ElementsList({ type }: { type: string }) {
     
     setEditingText(newText);
     
+    // Create a new document to parse the current HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
+    
+    // Find the element to update in the document
     const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
     
     if (elementToUpdate) {
+      // Update the text content
       elementToUpdate.textContent = newText;
       
-      // Preserve all attributes except contenteditable
+      // Preserve all original attributes and styles
       Array.from(element.attributes).forEach(attr => {
         if (attr.name !== 'contenteditable') {
           elementToUpdate.setAttribute(attr.name, attr.value);
         }
       });
       
-      // Get the updated HTML with proper structure
+      // Get the complete updated HTML
       const updatedHtml = doc.documentElement.outerHTML;
       
-      // Update the store
+      // Update the editor store with new HTML
       setHtml(updatedHtml);
       
-      // Update local state
-      setElements(prev => 
-        prev.map(el => 
-          el.getAttribute('data-element-id') === elementId 
-            ? elementToUpdate as HTMLElement 
-            : el
-        )
-      );
+      // Update the elements list
+      const updatedElements = Array.from(doc.getElementsByTagName(type)) as HTMLElement[];
+      setElements(updatedElements);
       
-      // Update preview immediately
+      // Force update the preview
       const previewFrame = document.querySelector('iframe');
       if (previewFrame?.contentDocument) {
         const elementInPreview = previewFrame.contentDocument.querySelector(
@@ -144,6 +143,12 @@ function ElementsList({ type }: { type: string }) {
         if (elementInPreview) {
           elementInPreview.textContent = newText;
           elementInPreview.classList.add('element-highlight');
+          
+          // Ensure the element is visible
+          elementInPreview.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
         }
       }
     }
@@ -189,18 +194,38 @@ function ElementsList({ type }: { type: string }) {
                 <input
                   type="text"
                   value={isEditing ? editingText : (element.textContent || '')}
-                  onChange={(e) => handleTextEdit(element, e.target.value)}
-                  onClick={() => handleElementClick(element)}
-                  onBlur={() => {
-                    setEditingId(null);
-                    setEditingText('');
+                  onChange={(e) => {
+                    handleTextEdit(element, e.target.value);
+                    setEditingText(e.target.value);
                   }}
-                  className={`flex-1 bg-transparent border-none focus:ring-2 focus:ring-primary rounded px-2 py-1 text-sm cursor-text ${
-                    isEditing ? 'ring-2 ring-primary' : ''
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleElementClick(element);
+                    setEditingId(element.getAttribute('data-element-id') || null);
+                    setEditingText(element.textContent || '');
+                  }}
+                  onFocus={(e) => {
+                    e.target.select();
+                    setEditingId(element.getAttribute('data-element-id') || null);
+                    setEditingText(element.textContent || '');
+                  }}
+                  onBlur={(e) => {
+                    // Only update if content changed
+                    if (e.target.value !== element.textContent) {
+                      handleTextEdit(element, e.target.value);
+                    }
+                    // Clear editing state after a small delay to ensure update completes
+                    setTimeout(() => {
+                      setEditingId(null);
+                      setEditingText('');
+                    }, 100);
+                  }}
+                  className={`flex-1 bg-transparent border border-transparent hover:border-input focus:border-input focus:ring-2 focus:ring-primary rounded px-2 py-1 text-sm cursor-text ${
+                    isEditing ? 'ring-2 ring-primary border-input' : ''
                   }`}
                   placeholder={`${type} element`}
                 />
-                <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
+                <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                   Click to edit
                 </span>
               </div>
