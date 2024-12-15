@@ -9,7 +9,9 @@ import {
   Undo,
   Redo,
   Code,
+  Copy,
 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +35,7 @@ export function Toolbar({
 }: ToolbarProps) {
   const { canUndo, canRedo, undo, redo, html } = useEditorStore();
   const [showHtml, setShowHtml] = useState(false);
+  const { toast } = useToast();
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -124,10 +127,42 @@ export function Toolbar({
           <DialogHeader>
             <DialogTitle>HTML Code</DialogTitle>
           </DialogHeader>
-          <div className="overflow-auto">
-            <pre className="p-4 bg-muted rounded-lg whitespace-pre-wrap text-sm">
-              {html}
-            </pre>
+          <div className="relative overflow-hidden">
+            <div className="relative">
+              <div className="overflow-auto max-h-[60vh] bg-muted rounded-lg">
+                <pre className="p-6 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
+                  {html
+                    .split('>')
+                    .join('>\n')
+                    .split('<')
+                    .join('\n<')
+                    .split('\n')
+                    .filter(line => line.trim())
+                    .map(line => '  '.repeat(
+                      (line.match(/^[\s]*</g) || [''])[0].length / 2
+                    ) + line.trim())
+                    .join('\n')
+                  }
+                </pre>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="absolute top-4 right-4 gap-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                onClick={() => {
+                  navigator.clipboard.writeText(html).then(() => {
+                    toast({
+                      title: "Copied!",
+                      description: "HTML code copied to clipboard",
+                      duration: 2000,
+                    });
+                  });
+                }}
+              >
+                <Copy className="h-4 w-4" />
+                Copy Code
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
