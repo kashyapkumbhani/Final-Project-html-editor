@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useDrag, useDrop } from "react-dnd";
 import { useEditorStore } from "@/lib/editor-store";
-import { parseHtml, updateHtml } from "@/lib/html-utils";
+import { parseHtml, updateHtml, getXPath, evaluateXPath } from "@/lib/html-utils";
 
 export function VisualEditor() {
   const { html, setHtml, selectedElement, setSelectedElement } = useEditorStore();
