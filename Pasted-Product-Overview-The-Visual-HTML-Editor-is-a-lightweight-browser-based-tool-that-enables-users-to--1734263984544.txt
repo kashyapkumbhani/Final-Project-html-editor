@@ -1,0 +1,115 @@
+Product Overview
+
+The Visual HTML Editor is a lightweight, browser-based tool that enables users to create, edit, and preview HTML content visually in real-time. It eliminates the need for a login system or database integration, making it simple, fast, and accessible.
+
+Key Features:
+
+Real-time Visual Editor: Users can edit HTML visually using a drag-and-drop interface while seeing the code updated in real time.
+
+Code Editor: A split-view editor that displays the underlying HTML code, allowing users to make precise adjustments.
+
+Element Properties Panel: Displays editable properties (e.g., classes, styles, attributes) of selected elements.
+
+Live Preview: A dedicated section to render the HTML output instantly.
+
+Export to File: Allows users to export the final HTML file.
+
+Import HTML File: Users can upload an existing HTML file to edit.
+
+Undo/Redo: Users can revert or reapply changes.
+
+Responsive Design Modes: Simulate how the HTML will look on various screen sizes (desktop, tablet, mobile).
+
+Functional Requirements
+
+1. Visual Editor
+
+Drag-and-drop functionality for elements such as text, images, buttons, forms, etc.
+
+Inline editing for text elements.
+
+Dynamic resizing and repositioning of elements.
+
+2. Code Editor
+
+Real-time synchronization with the visual editor.
+
+Syntax highlighting for HTML.
+
+Read/write capabilities for editing the HTML structure directly.
+
+3. Element Properties Panel
+
+Editable fields for element-specific attributes such as:
+
+id and class
+
+Inline styles
+
+Data attributes
+
+Drop-down menus for predefined styles or classes.
+
+4. Live Preview
+
+A real-time rendering engine displaying how the HTML content will appear in a browser.
+
+5. Export to File
+
+A button to download the current project as an index.html file.
+
+6. Import HTML File
+
+File upload functionality to import an HTML file into the editor for modification.
+
+7. Undo/Redo
+
+Unlimited undo/redo functionality.
+
+8. Responsive Design Modes
+
+Buttons to toggle preview sizes:
+
+Desktop (Default)
+
+Tablet (768px width)
+
+Mobile (375px width)
+
+Non-Functional Requirements
+
+Performance: The editor should load and operate smoothly on modern browsers (Chrome, Firefox, Edge).
+
+Compatibility: Ensure the tool works offline after the initial load (PWA capabilities optional).
+
+UI/UX: Clean and minimalistic interface.
+
+Accessibility: Keyboard navigation support for all actions.
+
+User Flow
+
+Start: The user opens the editor in a browser.
+
+Create/Edit: Users drag and drop elements into the visual editor or modify the code directly in the split-view code editor.
+
+Preview: The live preview panel updates dynamically with changes.
+
+Export/Import: Users can save their work as an HTML file or load an existing file for editing.
+
+Finalize: Once satisfied, the user exports the HTML file and closes the editor.
+
+Technical Stack
+
+Frontend Framework: Vanilla JavaScript or lightweight library (React optional).
+
+Styling: TailwindCSS or plain CSS.
+
+File Handling: JavaScript File and Blob APIs for import/export functionality.
+
+Deliverables
+
+Fully functional browser-based Visual HTML Editor.
+
+No server-side code or database setup.
+
+Well-documented codebase to ensure easy future enhancements.
