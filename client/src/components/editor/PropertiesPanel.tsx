@@ -8,6 +8,31 @@ import { HexColorPicker } from "react-colorful";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const colorProperties = ['color', 'background-color', 'border-color'];
+const commonProperties = [
+  'color',
+  'background-color',
+  'font-size',
+  'font-weight',
+  'margin',
+  'padding',
+  'border',
+  'border-color',
+  'width',
+  'height',
+  'display',
+  'position',
+  'text-align',
+  'border-radius',
+  'opacity',
+  'line-height',
+  'letter-spacing',
+  'text-decoration',
+  'text-transform',
+  'box-shadow',
+  'z-index',
+  'overflow',
+  'cursor'
+];
 
 export function PropertiesPanel() {
   const { selectedElement, updateElementStyle } = useEditorStore();
@@ -16,18 +41,13 @@ export function PropertiesPanel() {
 
   useEffect(() => {
     if (selectedElement) {
+      // Ensure the element has a unique identifier
+      if (!selectedElement.getAttribute('data-element-id')) {
+        selectedElement.setAttribute('data-element-id', `el-${Date.now()}`);
+      }
+
       const computedStyles = window.getComputedStyle(selectedElement);
       const styleObj: Record<string, string> = {};
-      
-      // Only show common CSS properties
-      const commonProperties = [
-        'color', 'background-color', 'font-size', 'font-weight',
-        'margin', 'padding', 'border', 'width', 'height',
-        'display', 'position', 'text-align', 'border-radius',
-        'opacity', 'line-height', 'letter-spacing',
-        'text-decoration', 'text-transform', 'box-shadow',
-        'z-index', 'overflow', 'cursor'
-      ];
       
       commonProperties.forEach(prop => {
         styleObj[prop] = selectedElement.style[prop as any] || computedStyles.getPropertyValue(prop);
@@ -45,8 +65,13 @@ export function PropertiesPanel() {
   }, [selectedElement]);
 
   const handleStyleChange = (property: string, value: string) => {
-    updateElementStyle(property, value);
+    if (!selectedElement) return;
+    
+    // Update the local state
     setStyles(prev => ({ ...prev, [property]: value }));
+    
+    // Update the store and propagate changes
+    updateElementStyle(property, value);
   };
 
   if (!selectedElement) {
@@ -111,6 +136,11 @@ export function PropertiesPanel() {
                 onChange={(e) => {
                   if (selectedElement) {
                     selectedElement.setAttribute(name, e.target.value);
+                    setAttributes(prev => ({
+                      ...prev,
+                      [name]: e.target.value
+                    }));
+                    // Update the HTML to reflect attribute changes
                     const editor = document.querySelector('[data-visual-editor]');
                     if (editor) {
                       const { setHtml } = useEditorStore.getState();
