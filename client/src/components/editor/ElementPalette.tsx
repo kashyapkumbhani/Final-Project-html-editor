@@ -53,7 +53,7 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
 function ElementsList({ type }: { type: string }) {
   const { html, setHtml, setSelectedElement } = useEditorStore();
   const [elements, setElements] = useState<HTMLElement[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     const parser = new DOMParser();
@@ -67,79 +67,80 @@ function ElementsList({ type }: { type: string }) {
     setElements(foundElements as HTMLElement[]);
   }, [html, type]);
 
-  const handleElementClick = (element: HTMLElement, index: number) => {
+  const handleElementClick = (element: HTMLElement) => {
+    const elementId = element.getAttribute('data-element-id');
+    if (!elementId) return;
+
+    // Start editing
+    setEditingId(elementId);
+    
+    // Update preview
     const previewFrame = document.querySelector('iframe');
-    if (previewFrame && previewFrame.contentDocument) {
-      const elementId = element.getAttribute('data-element-id');
+    if (previewFrame?.contentDocument) {
       const elementInPreview = previewFrame.contentDocument.querySelector(
         `[data-element-id="${elementId}"]`
       ) as HTMLElement;
       
       if (elementInPreview) {
-        // Remove previous highlight
-        const prevHighlighted = previewFrame.contentDocument.querySelector('.element-highlight');
-        if (prevHighlighted) {
-          prevHighlighted.classList.remove('element-highlight');
-        }
+        // Clear previous highlights
+        previewFrame.contentDocument.querySelectorAll('.element-highlight').forEach(el => {
+          el.classList.remove('element-highlight');
+        });
         
-        // Add highlight
+        // Highlight and scroll
         elementInPreview.classList.add('element-highlight');
-        
-        // Scroll into view
         elementInPreview.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'center'
         });
         
         setSelectedElement(elementInPreview);
-        setEditingIndex(index);
       }
     }
   };
 
-  const handleTextEdit = (index: number, newText: string) => {
-    const elementId = elements[index].getAttribute('data-element-id');
+  const handleTextEdit = (element: HTMLElement, newText: string) => {
+    const elementId = element.getAttribute('data-element-id');
+    if (!elementId) return;
     
-    // Parse the current HTML
+    // Parse and update HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
-    // Find and update the element in the parsed HTML
     const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
+    
     if (elementToUpdate) {
-      // Update the text content
+      // Update text content
       elementToUpdate.textContent = newText;
       
-      // Preserve all attributes
-      Array.from(elements[index].attributes).forEach(attr => {
+      // Preserve attributes
+      Array.from(element.attributes).forEach(attr => {
         if (attr.name !== 'contenteditable') {
           elementToUpdate.setAttribute(attr.name, attr.value);
         }
       });
       
-      // Update the HTML state with the modified content
+      // Update store and local state
       const updatedHtml = doc.documentElement.outerHTML;
       setHtml(updatedHtml);
       
-      // Update local elements list for the sidebar
-      const newElements = [...elements];
-      newElements[index] = elementToUpdate as HTMLElement;
-      setElements(newElements);
+      // Update elements list
+      setElements(prev => 
+        prev.map(el => 
+          el.getAttribute('data-element-id') === elementId 
+            ? elementToUpdate as HTMLElement 
+            : el
+        )
+      );
       
-      // Update the preview and highlight the element
+      // Update preview
       const previewFrame = document.querySelector('iframe');
       if (previewFrame?.contentDocument) {
-        // Remove previous highlights
-        previewFrame.contentDocument.querySelectorAll('.element-highlight').forEach(el => {
-          el.classList.remove('element-highlight');
-        });
-        
-        // Find and highlight the updated element
         const elementInPreview = previewFrame.contentDocument.querySelector(
           `[data-element-id="${elementId}"]`
         ) as HTMLElement;
         
         if (elementInPreview) {
+          elementInPreview.textContent = newText;
           elementInPreview.classList.add('element-highlight');
           elementInPreview.scrollIntoView({
             behavior: 'smooth',
@@ -153,51 +154,59 @@ function ElementsList({ type }: { type: string }) {
 
   return (
     <div className="space-y-2 pl-4">
-      {elements.map((element, index) => (
-        <div key={index} className="flex flex-col gap-2">
-          <div
-            className="p-2 rounded hover:bg-accent group relative"
-            onMouseEnter={() => {
-              const previewFrame = document.querySelector('iframe');
-              if (previewFrame?.contentDocument) {
-                const elementInPreview = previewFrame.contentDocument.querySelector(
-                  `[data-element-id="${element.getAttribute('data-element-id')}"]`
-                ) as HTMLElement;
-                if (elementInPreview) {
-                  elementInPreview.classList.add('element-hover');
-                  elementInPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      {elements.map((element) => {
+        const elementId = element.getAttribute('data-element-id');
+        const isEditing = elementId === editingId;
+        
+        return (
+          <div key={elementId} className="flex flex-col gap-2">
+            <div
+              className={`p-2 rounded hover:bg-accent group relative ${
+                isEditing ? 'bg-accent' : ''
+              }`}
+              onMouseEnter={() => {
+                const previewFrame = document.querySelector('iframe');
+                if (previewFrame?.contentDocument) {
+                  const elementInPreview = previewFrame.contentDocument.querySelector(
+                    `[data-element-id="${elementId}"]`
+                  ) as HTMLElement;
+                  if (elementInPreview) {
+                    elementInPreview.classList.add('element-hover');
+                    elementInPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
                 }
-              }
-            }}
-            onMouseLeave={() => {
-              const previewFrame = document.querySelector('iframe');
-              if (previewFrame?.contentDocument) {
-                const elementInPreview = previewFrame.contentDocument.querySelector(
-                  `[data-element-id="${element.getAttribute('data-element-id')}"]`
-                ) as HTMLElement;
-                if (elementInPreview) {
-                  elementInPreview.classList.remove('element-hover');
-                }
-              }
-            }}
-          >
-            <input
-              type="text"
-              value={element.textContent || ''}
-              onChange={(e) => handleTextEdit(index, e.target.value)}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleElementClick(element, index);
               }}
-              className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary rounded px-2 py-1 text-sm cursor-text"
-              placeholder={`${type} ${index + 1}`}
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
-              Click to edit
+              onMouseLeave={() => {
+                const previewFrame = document.querySelector('iframe');
+                if (previewFrame?.contentDocument) {
+                  const elementInPreview = previewFrame.contentDocument.querySelector(
+                    `[data-element-id="${elementId}"]`
+                  ) as HTMLElement;
+                  if (elementInPreview) {
+                    elementInPreview.classList.remove('element-hover');
+                  }
+                }
+              }}
+              onClick={() => handleElementClick(element)}
+            >
+              <input
+                type="text"
+                value={element.textContent || ''}
+                onChange={(e) => handleTextEdit(element, e.target.value)}
+                onFocus={() => handleElementClick(element)}
+                onBlur={() => setEditingId(null)}
+                className={`w-full bg-transparent border-none focus:ring-2 focus:ring-primary rounded px-2 py-1 text-sm cursor-text ${
+                  isEditing ? 'ring-2 ring-primary' : ''
+                }`}
+                placeholder={`${type} element`}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
+                Click to edit
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       {elements.length === 0 && (
         <p className="text-sm text-muted-foreground pl-2">No {type} elements found</p>
       )}
