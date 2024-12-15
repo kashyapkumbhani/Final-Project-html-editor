@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useDrag, useDrop } from "react-dnd";
 import { useEditorStore } from "@/lib/editor-store";
-import { parseHtml, updateHtml, getXPath, evaluateXPath } from "@/lib/html-utils";
+// Remove unused imports
 
 export function VisualEditor() {
   const { html, setHtml, selectedElement, setSelectedElement } = useEditorStore();
@@ -21,21 +21,11 @@ export function VisualEditor() {
   }, [editingElement]);
 
   const finishEditing = () => {
-    if (editingElement) {
-      try {
-        // Ensure element has a unique ID
-        if (!editingElement.hasAttribute('data-element-id')) {
-          editingElement.setAttribute('data-element-id', `element-${Date.now()}`);
-        }
-        
-        const newHtml = updateHtml(html, editingElement);
-        setHtml(newHtml);
-      } catch (error) {
-        console.error('Error updating element:', error);
-      } finally {
-        editingElement.contentEditable = "false";
-        setEditingElement(null);
-      }
+    if (editingElement && editorRef.current) {
+      editingElement.contentEditable = "false";
+      setEditingElement(null);
+      // Update the entire HTML content
+      setHtml(editorRef.current.innerHTML);
     }
   };
 
@@ -59,13 +49,10 @@ export function VisualEditor() {
     const clientOffset = monitor.getClientOffset();
     const editorBounds = editorRef.current?.getBoundingClientRect();
     
-    if (editorBounds && clientOffset) {
+    if (editorBounds && clientOffset && editorRef.current) {
       const element = document.createElement(item.type);
       const x = clientOffset.x - editorBounds.left;
       const y = clientOffset.y - editorBounds.top;
-      
-      // Add unique ID to track the element
-      element.setAttribute('data-element-id', `element-${Date.now()}`);
       
       if (item.type === 'p') {
         element.textContent = 'Double-click to edit text';
@@ -77,8 +64,8 @@ export function VisualEditor() {
       element.style.left = `${x}px`;
       element.style.top = `${y}px`;
       
-      const newHtml = updateHtml(html, element);
-      setHtml(newHtml);
+      editorRef.current.appendChild(element);
+      setHtml(editorRef.current.innerHTML);
     }
   };
 
