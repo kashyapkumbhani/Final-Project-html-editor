@@ -7,22 +7,30 @@ import {
   FormInput, 
   Heading1, 
   Heading2, 
-  Link, 
+  Heading3,
   Image, 
-  ListOrdered,
-  Container
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { useEditorStore } from "@/lib/editor-store";
+import { useEffect, useState } from "react";
 
-const elements = [
-  { id: "text", type: "p", icon: Type, label: "Paragraph" },
-  { id: "h1", type: "h1", icon: Heading1, label: "Heading 1" },
-  { id: "button", type: "button", icon: Square, label: "Button" },
-  { id: "input", type: "input", icon: FormInput, label: "Input" }
+const elementTypes = [
+  { id: "p", icon: Type, label: "Paragraphs" },
+  { id: "h1", icon: Heading1, label: "Heading 1" },
+  { id: "h2", icon: Heading2, label: "Heading 2" },
+  { id: "h3", icon: Heading3, label: "Heading 3" },
+  { id: "button", icon: Square, label: "Buttons" },
+  { id: "img", icon: Image, label: "Images" },
 ];
 
 function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any; label: string }) {
   const [{ isDragging }, drag] = useDrag(() => ({
-    type: type,
+    type,
     item: { type },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -42,19 +50,85 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
   );
 }
 
+function ElementsList({ type }: { type: string }) {
+  const { html, setSelectedElement } = useEditorStore();
+  const [elements, setElements] = useState<HTMLElement[]>([]);
+
+  useEffect(() => {
+    // Parse the HTML to get all elements of the specified type
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const foundElements = Array.from(doc.getElementsByTagName(type));
+    setElements(foundElements as HTMLElement[]);
+  }, [html, type]);
+
+  const handleElementClick = (element: HTMLElement) => {
+    const previewFrame = document.querySelector('iframe');
+    if (previewFrame && previewFrame.contentDocument) {
+      const elementInPreview = previewFrame.contentDocument.querySelector(
+        `[data-element-id="${element.getAttribute('data-element-id')}"]`
+      ) as HTMLElement;
+      if (elementInPreview) {
+        setSelectedElement(elementInPreview);
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-2 pl-4">
+      {elements.map((element, index) => (
+        <Button
+          key={index}
+          variant="ghost"
+          className="w-full justify-start text-sm"
+          onClick={() => handleElementClick(element)}
+        >
+          {element.textContent || `${type} ${index + 1}`}
+        </Button>
+      ))}
+      {elements.length === 0 && (
+        <p className="text-sm text-muted-foreground pl-2">No {type} elements found</p>
+      )}
+    </div>
+  );
+}
+
 export function ElementPalette() {
   return (
-    <Card className="h-full p-4">
-      <h3 className="font-medium mb-4">Elements</h3>
-      <div className="space-y-2">
-        {elements.map((element) => (
-          <DraggableElement
-            key={element.id}
-            type={element.type}
-            icon={element.icon}
-            label={element.label}
-          />
-        ))}
+    <Card className="h-full p-4 overflow-auto">
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-medium mb-4">Add Elements</h3>
+          <div className="space-y-2">
+            {elementTypes.map((element) => (
+              <DraggableElement
+                key={element.id}
+                type={element.id}
+                icon={element.icon}
+                label={element.label}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div className="border-t pt-4">
+          <h3 className="font-medium mb-4">Existing Elements</h3>
+          <Accordion type="single" collapsible className="w-full">
+            {elementTypes.map((element) => (
+              <AccordionItem key={element.id} value={element.id}>
+                <AccordionTrigger className="text-sm">
+                  <span className="flex items-center gap-2">
+                    <element.icon className="h-4 w-4" />
+                    {element.label}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ElementsList type={element.id} />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </div>
     </Card>
   );
