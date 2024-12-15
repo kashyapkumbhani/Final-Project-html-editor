@@ -55,41 +55,46 @@ function ElementsList({ type }: { type: string }) {
   const [elements, setElements] = useState<HTMLElement[]>([]);
 
   useEffect(() => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const foundElements = Array.from(doc.getElementsByTagName(type));
-    foundElements.forEach((el, index) => {
-      if (!el.getAttribute('data-element-id')) {
-        el.setAttribute('data-element-id', `${type}-${index}`);
-      }
-    });
-    setElements(foundElements as HTMLElement[]);
+    // Get elements from the preview iframe instead of parsing HTML
+    const previewFrame = document.querySelector('iframe');
+    if (previewFrame?.contentDocument) {
+      const foundElements = Array.from(previewFrame.contentDocument.getElementsByTagName(type));
+      foundElements.forEach((el, index) => {
+        if (!el.getAttribute('data-element-id')) {
+          el.setAttribute('data-element-id', `${type}-${index}`);
+        }
+      });
+      setElements(foundElements as HTMLElement[]);
+    }
   }, [html, type]);
 
   const handleElementSelect = (element: HTMLElement) => {
     const elementId = element.getAttribute('data-element-id');
     if (!elementId) return;
 
-    // Update preview and highlight selected element
     const previewFrame = document.querySelector('iframe');
     if (previewFrame?.contentDocument) {
-      // Remove existing highlights
-      previewFrame.contentDocument.querySelectorAll('.element-highlight').forEach(el => {
-        el.classList.remove('element-highlight');
-      });
+      // Clear existing highlights
+      const existingHighlights = previewFrame.contentDocument.querySelectorAll('.element-highlight');
+      existingHighlights.forEach(el => el.classList.remove('element-highlight'));
 
-      // Find and highlight the selected element
+      // Find the element in preview
       const elementInPreview = previewFrame.contentDocument.querySelector(
         `[data-element-id="${elementId}"]`
-      ) as HTMLElement;
+      );
 
       if (elementInPreview) {
+        // Add highlight class
         elementInPreview.classList.add('element-highlight');
+        
+        // Scroll into view
         elementInPreview.scrollIntoView({
           behavior: 'smooth',
           block: 'center'
         });
-        setSelectedElement(elementInPreview);
+        
+        // Set as selected element
+        setSelectedElement(elementInPreview as HTMLElement);
       }
     }
   };
@@ -98,44 +103,21 @@ function ElementsList({ type }: { type: string }) {
     <div className="space-y-2 pl-4">
       {elements.map((element) => {
         const elementId = element.getAttribute('data-element-id');
-        const elementText = type === 'img' ? element.getAttribute('alt') || '' : element.textContent || '';
+        const elementText = type === 'img' ? 
+          element.getAttribute('alt') || 'Image' : 
+          element.textContent?.slice(0, 30) || `${type} element`;
         
         return (
           <div 
             key={elementId} 
-            className="flex items-center gap-2 p-2 rounded hover:bg-accent cursor-pointer group"
+            className="flex items-center gap-2 p-2 rounded hover:bg-accent cursor-pointer"
             onClick={() => handleElementSelect(element)}
-            onMouseEnter={() => {
-              const previewFrame = document.querySelector('iframe');
-              if (previewFrame?.contentDocument) {
-                const elementInPreview = previewFrame.contentDocument.querySelector(
-                  `[data-element-id="${elementId}"]`
-                ) as HTMLElement;
-                if (elementInPreview) {
-                  elementInPreview.classList.add('element-hover');
-                }
-              }
-            }}
-            onMouseLeave={() => {
-              const previewFrame = document.querySelector('iframe');
-              if (previewFrame?.contentDocument) {
-                const elementInPreview = previewFrame.contentDocument.querySelector(
-                  `[data-element-id="${elementId}"]`
-                ) as HTMLElement;
-                if (elementInPreview) {
-                  elementInPreview.classList.remove('element-hover');
-                }
-              }
-            }}
           >
             <span className="text-xs text-muted-foreground font-mono">
               {type.toUpperCase()}
             </span>
             <span className="text-sm truncate flex-1">
-              {elementText || `(Empty ${type})`}
-            </span>
-            <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
-              Click to select
+              {elementText}
             </span>
           </div>
         );
