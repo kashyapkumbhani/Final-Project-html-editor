@@ -23,14 +23,13 @@ export function VisualEditor() {
   const finishEditing = () => {
     if (editingElement) {
       try {
-        const doc = parseHtml(html);
-        const xpath = getXPath(editingElement);
-        const elementInDoc = evaluateXPath(doc, xpath);
-        
-        if (elementInDoc) {
-          elementInDoc.textContent = editingElement.textContent;
-          setHtml(doc.documentElement.outerHTML);
+        // Ensure element has a unique ID
+        if (!editingElement.hasAttribute('data-element-id')) {
+          editingElement.setAttribute('data-element-id', `element-${Date.now()}`);
         }
+        
+        const newHtml = updateHtml(html, editingElement);
+        setHtml(newHtml);
       } catch (error) {
         console.error('Error updating element:', error);
       } finally {
@@ -64,6 +63,9 @@ export function VisualEditor() {
       const element = document.createElement(item.type);
       const x = clientOffset.x - editorBounds.left;
       const y = clientOffset.y - editorBounds.top;
+      
+      // Add unique ID to track the element
+      element.setAttribute('data-element-id', `element-${Date.now()}`);
       
       if (item.type === 'p') {
         element.textContent = 'Double-click to edit text';

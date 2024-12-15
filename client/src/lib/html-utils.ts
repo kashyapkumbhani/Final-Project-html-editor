@@ -34,8 +34,15 @@ export function evaluateXPath(document: Document, xpath: string): HTMLElement | 
   return result.singleNodeValue as HTMLElement;
 }
 
-export function updateHtml(html: string, element: HTMLElement): string {
+export function updateHtml(html: string, updatedElement: HTMLElement): string {
   const doc = parseHtml(html);
-  doc.body.appendChild(element.cloneNode(true));
+  const existingElement = doc.querySelector(`[data-element-id="${updatedElement.getAttribute('data-element-id')}"]`);
+  
+  if (existingElement) {
+    existingElement.replaceWith(updatedElement.cloneNode(true));
+  } else {
+    doc.body.appendChild(updatedElement.cloneNode(true));
+  }
+  
   return doc.documentElement.outerHTML;
 }
