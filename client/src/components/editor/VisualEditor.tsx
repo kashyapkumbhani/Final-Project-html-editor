@@ -2,8 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { useDrop } from "react-dnd";
 import { useEditorStore } from "@/lib/editor-store";
+import { ImageUploadDialog } from "./ImageUploadDialog";
 
 export function VisualEditor() {
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
   const { html, setHtml, selectedElement, setSelectedElement } = useEditorStore();
   const editorRef = useRef<HTMLDivElement>(null);
   const [editingElement, setEditingElement] = useState<HTMLElement | null>(null);
@@ -34,7 +37,20 @@ export function VisualEditor() {
     // Don't select the editor container itself
     if (target === editorRef.current) return;
     
+    // Handle image clicks
+    if (target.tagName.toLowerCase() === 'img') {
+      setSelectedImage(target as HTMLImageElement);
+      setShowImageUpload(true);
+    }
+    
     setSelectedElement(target);
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    if (selectedImage && editorRef.current) {
+      selectedImage.src = imageUrl;
+      setHtml(editorRef.current.innerHTML);
+    }
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
@@ -111,6 +127,12 @@ export function VisualEditor() {
         onDoubleClick={handleDoubleClick}
         onBlur={finishEditing}
         dangerouslySetInnerHTML={{ __html: html }}
+      />
+      <ImageUploadDialog
+        open={showImageUpload}
+        onOpenChange={setShowImageUpload}
+        onImageUpload={handleImageUpload}
+        currentSrc={selectedImage?.src}
       />
     </Card>
   );
