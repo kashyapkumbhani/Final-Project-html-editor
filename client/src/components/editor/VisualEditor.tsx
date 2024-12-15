@@ -85,6 +85,7 @@ export function VisualEditor() {
           editorRef.current = node;
         }}
         className="min-h-full relative"
+        data-visual-editor
         onClick={handleElementClick}
         onDoubleClick={handleDoubleClick}
         onBlur={finishEditing}
