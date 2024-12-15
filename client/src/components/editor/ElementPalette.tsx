@@ -214,25 +214,35 @@ export function ElementPalette() {
   }
 
   return (
-    <Card className="h-full p-4 overflow-auto">
-      <div className="space-y-4">
-        <h3 className="font-medium mb-4">Page Elements</h3>
-        <Accordion type="single" collapsible className="w-full">
-          {elementTypes.map((element) => (
-            <AccordionItem key={element.id} value={element.id}>
-              <AccordionTrigger className="text-sm">
-                <span className="flex items-center gap-2">
-                  <element.icon className="h-4 w-4" />
-                  {element.label}
-                </span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <ElementsList type={element.id} />
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
+    <Card className="h-full overflow-auto">
+      <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="elements">
+          <div className="px-4 pt-4">
+            <AccordionTrigger className="text-base font-medium">
+              Page Elements
+            </AccordionTrigger>
+          </div>
+          <AccordionContent>
+            <div className="px-4 pb-4">
+              <Accordion type="single" collapsible className="w-full">
+                {elementTypes.map((element) => (
+                  <AccordionItem key={element.id} value={element.id}>
+                    <AccordionTrigger className="text-sm">
+                      <span className="flex items-center gap-2">
+                        <element.icon className="h-4 w-4" />
+                        {element.label}
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <ElementsList type={element.id} />
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 }
