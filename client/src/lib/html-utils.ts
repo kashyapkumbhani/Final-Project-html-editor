@@ -4,24 +4,22 @@ export function parseHtml(html: string): Document {
 }
 
 export function getXPath(element: HTMLElement): string {
-  if (!element.parentNode) return '';
-  
-  let siblings = element.parentNode.childNodes;
-  let count = 1;
-  let index = 0;
-  
-  for (let i = 0; i < siblings.length; i++) {
-    let sibling = siblings[i];
-    if (sibling === element) {
-      index = count;
-      break;
-    }
-    if (sibling.nodeType === 1 && sibling.nodeName === element.nodeName) {
-      count++;
-    }
+  if (!element || !element.parentElement) {
+    return element.tagName.toLowerCase();
   }
   
-  return getXPath(element.parentElement as HTMLElement) + '/' + element.tagName.toLowerCase() + '[' + index + ']';
+  const parent = element.parentElement;
+  const siblings = Array.from(parent.children).filter(
+    child => child.tagName === element.tagName
+  );
+  
+  const index = siblings.indexOf(element) + 1;
+  
+  const parentPath = parent.tagName === 'BODY' 
+    ? '/html/body'
+    : getXPath(parent);
+    
+  return `${parentPath}/${element.tagName.toLowerCase()}[${index}]`;
 }
 
 export function evaluateXPath(document: Document, xpath: string): HTMLElement | null {

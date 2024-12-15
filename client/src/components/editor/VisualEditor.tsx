@@ -22,16 +22,21 @@ export function VisualEditor() {
 
   const finishEditing = () => {
     if (editingElement) {
-      const doc = parseHtml(html);
-      const xpath = getXPath(editingElement);
-      const elementInDoc = evaluateXPath(doc, xpath);
-      
-      if (elementInDoc) {
-        elementInDoc.innerHTML = editingElement.innerHTML;
-        setHtml(doc.documentElement.outerHTML);
+      try {
+        const doc = parseHtml(html);
+        const xpath = getXPath(editingElement);
+        const elementInDoc = evaluateXPath(doc, xpath);
+        
+        if (elementInDoc) {
+          elementInDoc.textContent = editingElement.textContent;
+          setHtml(doc.documentElement.outerHTML);
+        }
+      } catch (error) {
+        console.error('Error updating element:', error);
+      } finally {
+        editingElement.contentEditable = "false";
+        setEditingElement(null);
       }
-      
-      setEditingElement(null);
     }
   };
 
