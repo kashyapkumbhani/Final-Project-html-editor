@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { useEditorStore } from "@/lib/editor-store";
+import { ImageUploadDialog } from "./ImageUploadDialog";
 
 interface PreviewProps {
   mode: "desktop" | "tablet" | "mobile";
@@ -16,14 +17,39 @@ export function Preview({ mode }: PreviewProps) {
   const { html, setHtml, setSelectedElement, selectedElement } = useEditorStore();
   const previewRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
 
   const handleElementClick = (e: React.MouseEvent) => {
     e.preventDefault();
     const target = e.target as HTMLElement;
+    
+    if (target.tagName.toLowerCase() === 'img') {
+      setSelectedImage(target as HTMLImageElement);
+      setShowImageUpload(true);
+      return;
+    }
+    
     if (target !== previewRef.current) {
       setSelectedElement(target);
       target.contentEditable = "true";
       target.focus();
+    }
+  };
+
+  const handleImageUpload = (imageUrl: string) => {
+    if (selectedImage && iframeRef.current?.contentDocument) {
+      const elementId = selectedImage.getAttribute('data-element-id');
+      if (elementId) {
+        const imageInDoc = iframeRef.current.contentDocument.querySelector(
+          `[data-element-id="${elementId}"]`
+        ) as HTMLImageElement;
+        
+        if (imageInDoc) {
+          imageInDoc.src = imageUrl;
+          setHtml(iframeRef.current.contentDocument.body.innerHTML);
+        }
+      }
     }
   };
 
@@ -116,7 +142,7 @@ export function Preview({ mode }: PreviewProps) {
         className="bg-white shadow-lg overflow-auto transition-all duration-300"
       >
         <iframe
-          ref={previewRef as any}
+          ref={iframeRef}
           className="min-h-full w-full border-none"
           srcDoc={`
             <!DOCTYPE html>
@@ -168,6 +194,12 @@ export function Preview({ mode }: PreviewProps) {
           }}
         />
       </div>
+      <ImageUploadDialog
+        open={showImageUpload}
+        onOpenChange={setShowImageUpload}
+        onImageUpload={handleImageUpload}
+        currentSrc={selectedImage?.src}
+      />
     </Card>
   );
 }
