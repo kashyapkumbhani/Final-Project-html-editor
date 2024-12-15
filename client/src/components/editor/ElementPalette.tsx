@@ -18,14 +18,14 @@ import {
 } from "@/components/ui/accordion";
 import { useEditorStore } from "@/lib/editor-store";
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 
 const elementTypes = [
-  { id: "p", icon: Type, label: "Paragraph", tag: "p" },
-  { id: "h1", icon: Heading1, label: "Heading 1", tag: "h1" },
-  { id: "h2", icon: Heading2, label: "Heading 2", tag: "h2" },
-  { id: "h3", icon: Heading3, label: "Heading 3", tag: "h3" },
-  { id: "button", icon: Square, label: "Button", tag: "button" },
+  { id: "p", icon: Type, label: "Paragraphs" },
+  { id: "h1", icon: Heading1, label: "Heading 1" },
+  { id: "h2", icon: Heading2, label: "Heading 2" },
+  { id: "h3", icon: Heading3, label: "Heading 3" },
+  { id: "button", icon: Square, label: "Buttons" },
+  { id: "img", icon: Image, label: "Images" },
 ];
 
 function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any; label: string }) {
@@ -38,7 +38,7 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
   }));
 
   return (
-    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }} className="mb-2">
+    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
       <Button
         variant="outline"
         className="flex items-center gap-2 w-full justify-start"
@@ -50,75 +50,165 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
   );
 }
 
-function ElementsList({ tag }: { tag: string }) {
-  const { html, setHtml } = useEditorStore();
-  const [elements, setElements] = useState<Array<{ id: string; text: string }>>([]);
+function ElementsList({ type }: { type: string }) {
+  const { html, setHtml, setSelectedElement } = useEditorStore();
+  const [elements, setElements] = useState<HTMLElement[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  // Function to scan HTML and update elements list
-  const scanHtml = () => {
-    // Create a temporary div to parse HTML
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    // Find all elements of the specified tag
-    const foundElements = Array.from(tempDiv.getElementsByTagName(tag));
-    
-    // Map elements to our format with IDs
-    const mappedElements = foundElements.map(el => {
-      let id = el.getAttribute('data-element-id');
-      if (!id) {
-        id = `${tag}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        el.setAttribute('data-element-id', id);
+  useEffect(() => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const foundElements = Array.from(doc.getElementsByTagName(type));
+    foundElements.forEach((el, index) => {
+      if (!el.getAttribute('data-element-id')) {
+        el.setAttribute('data-element-id', `${type}-${index}`);
       }
-      return {
-        id,
-        text: el.textContent || ''
-      };
     });
+    setElements(foundElements as HTMLElement[]);
+  }, [html, type]);
 
-    setElements(mappedElements);
+  const handleElementClick = (element: HTMLElement) => {
+    const elementId = element.getAttribute('data-element-id');
+    if (!elementId) return;
 
-    // Update HTML if we added any IDs
-    if (foundElements.some(el => el.getAttribute('data-element-id'))) {
-      setHtml(tempDiv.innerHTML);
+    // Start editing
+    setEditingId(elementId);
+    
+    // Update preview
+    const previewFrame = document.querySelector('iframe');
+    if (previewFrame?.contentDocument) {
+      const elementInPreview = previewFrame.contentDocument.querySelector(
+        `[data-element-id="${elementId}"]`
+      ) as HTMLElement;
+      
+      if (elementInPreview) {
+        // Clear previous highlights
+        previewFrame.contentDocument.querySelectorAll('.element-highlight').forEach(el => {
+          el.classList.remove('element-highlight');
+        });
+        
+        // Highlight and scroll
+        elementInPreview.classList.add('element-highlight');
+        elementInPreview.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
+        
+        setSelectedElement(elementInPreview);
+      }
     }
   };
 
-  // Scan HTML whenever it changes
-  useEffect(() => {
-    scanHtml();
-  }, [html]);
-
-  const updateElementText = (elementId: string, newText: string) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-
-    const elementToUpdate = tempDiv.querySelector(`[data-element-id="${elementId}"]`);
+  const handleTextEdit = (element: HTMLElement, newText: string) => {
+    const elementId = element.getAttribute('data-element-id');
+    if (!elementId) return;
+    
+    // Parse and update HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
+    
     if (elementToUpdate) {
+      // Update text content
       elementToUpdate.textContent = newText;
-      setHtml(tempDiv.innerHTML);
+      
+      // Preserve attributes
+      Array.from(element.attributes).forEach(attr => {
+        if (attr.name !== 'contenteditable') {
+          elementToUpdate.setAttribute(attr.name, attr.value);
+        }
+      });
+      
+      // Update store and local state
+      const updatedHtml = doc.documentElement.outerHTML;
+      setHtml(updatedHtml);
+      
+      // Update elements list
+      setElements(prev => 
+        prev.map(el => 
+          el.getAttribute('data-element-id') === elementId 
+            ? elementToUpdate as HTMLElement 
+            : el
+        )
+      );
+      
+      // Update preview
+      const previewFrame = document.querySelector('iframe');
+      if (previewFrame?.contentDocument) {
+        const elementInPreview = previewFrame.contentDocument.querySelector(
+          `[data-element-id="${elementId}"]`
+        ) as HTMLElement;
+        
+        if (elementInPreview) {
+          elementInPreview.textContent = newText;
+          elementInPreview.classList.add('element-highlight');
+          elementInPreview.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+          setSelectedElement(elementInPreview);
+        }
+      }
     }
   };
 
   return (
-    <div className="space-y-2 p-2 max-h-[200px] overflow-y-auto">
-      {elements.map((element) => (
-        <div 
-          key={element.id}
-          className="flex items-center gap-2 bg-background/50 p-2 rounded-md hover:bg-accent"
-        >
-          <Input
-            value={element.text}
-            onChange={(e) => updateElementText(element.id, e.target.value)}
-            className="h-8 text-sm"
-            placeholder={`Edit ${tag} text`}
-          />
-        </div>
-      ))}
+    <div className="space-y-2 pl-4">
+      {elements.map((element) => {
+        const elementId = element.getAttribute('data-element-id');
+        const isEditing = elementId === editingId;
+        
+        return (
+          <div key={elementId} className="flex flex-col gap-2">
+            <div
+              className={`p-2 rounded hover:bg-accent group relative ${
+                isEditing ? 'bg-accent' : ''
+              }`}
+              onMouseEnter={() => {
+                const previewFrame = document.querySelector('iframe');
+                if (previewFrame?.contentDocument) {
+                  const elementInPreview = previewFrame.contentDocument.querySelector(
+                    `[data-element-id="${elementId}"]`
+                  ) as HTMLElement;
+                  if (elementInPreview) {
+                    elementInPreview.classList.add('element-hover');
+                    elementInPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }
+              }}
+              onMouseLeave={() => {
+                const previewFrame = document.querySelector('iframe');
+                if (previewFrame?.contentDocument) {
+                  const elementInPreview = previewFrame.contentDocument.querySelector(
+                    `[data-element-id="${elementId}"]`
+                  ) as HTMLElement;
+                  if (elementInPreview) {
+                    elementInPreview.classList.remove('element-hover');
+                  }
+                }
+              }}
+              onClick={() => handleElementClick(element)}
+            >
+              <input
+                type="text"
+                value={element.textContent || ''}
+                onChange={(e) => handleTextEdit(element, e.target.value)}
+                onFocus={() => handleElementClick(element)}
+                onBlur={() => setEditingId(null)}
+                className={`w-full bg-transparent border-none focus:ring-2 focus:ring-primary rounded px-2 py-1 text-sm cursor-text ${
+                  isEditing ? 'ring-2 ring-primary' : ''
+                }`}
+                placeholder={`${type} element`}
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground opacity-0 group-hover:opacity-100">
+                Click to edit
+              </div>
+            </div>
+          </div>
+        );
+      })}
       {elements.length === 0 && (
-        <div className="text-sm text-muted-foreground px-2">
-          No {tag} elements found
-        </div>
+        <p className="text-sm text-muted-foreground pl-2">No {type} elements found</p>
       )}
     </div>
   );
@@ -126,34 +216,20 @@ function ElementsList({ tag }: { tag: string }) {
 
 export function ElementPalette() {
   return (
-    <Card className="h-1/2 overflow-hidden flex flex-col">
-      <div className="p-4 flex-shrink-0">
+    <Card className="h-full p-4 overflow-auto">
+      <div className="space-y-4">
         <h3 className="font-medium mb-4">Page Elements</h3>
-        
-        {/* Draggable Elements */}
-        <div className="mb-6">
-          <p className="text-sm text-muted-foreground mb-2">Drag to add new elements</p>
-          {elementTypes.map((element) => (
-            <DraggableElement
-              key={element.id}
-              type={element.id}
-              icon={element.icon}
-              label={element.label}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Existing Elements */}
-      <div className="flex-1 overflow-y-auto">
-        <Accordion type="multiple" className="w-full">
+        <Accordion type="single" collapsible className="w-full">
           {elementTypes.map((element) => (
             <AccordionItem key={element.id} value={element.id}>
-              <AccordionTrigger className="text-sm px-4">
-                {element.label}s
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2">
+                  <element.icon className="h-4 w-4" />
+                  {element.label}
+                </span>
               </AccordionTrigger>
               <AccordionContent>
-                <ElementsList tag={element.tag} />
+                <ElementsList type={element.id} />
               </AccordionContent>
             </AccordionItem>
           ))}

@@ -119,10 +119,10 @@ export default function Editor() {
           onPreviewModeChange={setPreviewMode}
         />
       </div>
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex">
         <ResizablePanelGroup direction="horizontal" className="flex-1">
           <ResizablePanel defaultSize={25} minSize={20}>
-            <div className="h-full flex flex-col fixed w-[25%]">
+            <div className="h-full flex flex-col">
               <ElementPalette />
               <div className="flex-1">
                 <PropertiesPanel />
@@ -131,9 +131,7 @@ export default function Editor() {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={75}>
-            <div className="h-full overflow-auto">
-              <Preview mode={previewMode} />
-            </div>
+            <Preview mode={previewMode} />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
