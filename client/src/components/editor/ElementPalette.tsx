@@ -100,31 +100,39 @@ function ElementsList({ type }: { type: string }) {
   const handleTextEdit = (index: number, newText: string) => {
     const elementId = elements[index].getAttribute('data-element-id');
     
-    // Update the preview frame directly for immediate feedback
-    const previewFrame = document.querySelector('iframe');
-    if (previewFrame?.contentDocument) {
-      const elementInPreview = previewFrame.contentDocument.querySelector(
-        `[data-element-id="${elementId}"]`
-      ) as HTMLElement;
-      if (elementInPreview) {
-        elementInPreview.textContent = newText;
-      }
-    }
-    
-    // Update the HTML state
+    // Parse the current HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
     
+    // Find and update the element in the parsed HTML
+    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
     if (elementToUpdate) {
       elementToUpdate.textContent = newText;
-      setHtml(doc.documentElement.outerHTML);
+      
+      // Update the HTML state with the modified content
+      const updatedHtml = doc.documentElement.outerHTML;
+      setHtml(updatedHtml);
+      
+      // Update local elements list for the sidebar
+      const updatedElements = [...elements];
+      updatedElements[index] = elementToUpdate as HTMLElement;
+      setElements(updatedElements);
+      
+      // Set the selected element to highlight it in the preview
+      const previewFrame = document.querySelector('iframe');
+      if (previewFrame?.contentDocument) {
+        const elementInPreview = previewFrame.contentDocument.querySelector(
+          `[data-element-id="${elementId}"]`
+        ) as HTMLElement;
+        if (elementInPreview) {
+          setSelectedElement(elementInPreview);
+          elementInPreview.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }
+      }
     }
-    
-    // Update the elements list
-    const updatedElements = [...elements];
-    updatedElements[index].textContent = newText;
-    setElements(updatedElements);
   };
 
   return (
