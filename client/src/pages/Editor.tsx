@@ -12,7 +12,17 @@ export default function Editor() {
   const handleFileImport = async (file: File) => {
     try {
       const text = await file.text();
+      // Parse the HTML to ensure we keep all styles
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(text, 'text/html');
+      
+      // Ensure all styles and links are preserved
+      const stylesheets = doc.querySelectorAll('link[rel="stylesheet"]');
+      const styles = doc.querySelectorAll('style');
+      
+      // Preserve the complete HTML structure including head section
       useEditorStore.getState().setHtml(text);
+      
       alert("File imported successfully");
     } catch (error) {
       alert("Error importing file. Please try again with a valid HTML file");

@@ -45,14 +45,19 @@ export function Preview({ mode }: PreviewProps) {
         }}
         className="bg-white shadow-lg overflow-auto transition-all duration-300"
       >
-        <div
-          ref={previewRef}
-          className="min-h-full w-full"
-          onClick={handleElementClick}
-          onBlur={handleBlur}
-          dangerouslySetInnerHTML={{ __html: html }}
+        <iframe
+          ref={previewRef as any}
+          className="min-h-full w-full border-none"
+          srcDoc={html}
           style={{
             cursor: 'pointer'
+          }}
+          onLoad={(e) => {
+            const frame = e.target as HTMLIFrameElement;
+            if (frame.contentDocument) {
+              frame.contentDocument.body.addEventListener('click', handleElementClick as any);
+              frame.contentDocument.body.addEventListener('blur', handleBlur as any);
+            }
           }}
         />
         <style>{`
