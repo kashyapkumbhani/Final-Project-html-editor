@@ -68,7 +68,22 @@ function ElementsList({ type }: { type: string }) {
       const elementInPreview = previewFrame.contentDocument.querySelector(
         `[data-element-id="${element.getAttribute('data-element-id')}"]`
       ) as HTMLElement;
+      
       if (elementInPreview) {
+        // Highlight the element
+        const prevHighlighted = previewFrame.contentDocument.querySelector('.element-highlight');
+        if (prevHighlighted) {
+          prevHighlighted.classList.remove('element-highlight');
+        }
+        elementInPreview.classList.add('element-highlight');
+        
+        // Scroll the element into view
+        elementInPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Make element editable
+        elementInPreview.contentEditable = 'true';
+        elementInPreview.focus();
+        
         setSelectedElement(elementInPreview);
       }
     }
@@ -82,6 +97,28 @@ function ElementsList({ type }: { type: string }) {
           variant="ghost"
           className="w-full justify-start text-sm"
           onClick={() => handleElementClick(element)}
+          onMouseEnter={() => {
+            const previewFrame = document.querySelector('iframe');
+            if (previewFrame?.contentDocument) {
+              const elementInPreview = previewFrame.contentDocument.querySelector(
+                `[data-element-id="${element.getAttribute('data-element-id')}"]`
+              ) as HTMLElement;
+              if (elementInPreview) {
+                elementInPreview.classList.add('element-hover');
+              }
+            }
+          }}
+          onMouseLeave={() => {
+            const previewFrame = document.querySelector('iframe');
+            if (previewFrame?.contentDocument) {
+              const elementInPreview = previewFrame.contentDocument.querySelector(
+                `[data-element-id="${element.getAttribute('data-element-id')}"]`
+              ) as HTMLElement;
+              if (elementInPreview) {
+                elementInPreview.classList.remove('element-hover');
+              }
+            }
+          }}
         >
           {element.textContent || `${type} ${index + 1}`}
         </Button>
@@ -97,38 +134,22 @@ export function ElementPalette() {
   return (
     <Card className="h-full p-4 overflow-auto">
       <div className="space-y-4">
-        <div>
-          <h3 className="font-medium mb-4">Add Elements</h3>
-          <div className="space-y-2">
-            {elementTypes.map((element) => (
-              <DraggableElement
-                key={element.id}
-                type={element.id}
-                icon={element.icon}
-                label={element.label}
-              />
-            ))}
-          </div>
-        </div>
-        
-        <div className="border-t pt-4">
-          <h3 className="font-medium mb-4">Existing Elements</h3>
-          <Accordion type="single" collapsible className="w-full">
-            {elementTypes.map((element) => (
-              <AccordionItem key={element.id} value={element.id}>
-                <AccordionTrigger className="text-sm">
-                  <span className="flex items-center gap-2">
-                    <element.icon className="h-4 w-4" />
-                    {element.label}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <ElementsList type={element.id} />
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </div>
+        <h3 className="font-medium mb-4">Page Elements</h3>
+        <Accordion type="single" collapsible className="w-full">
+          {elementTypes.map((element) => (
+            <AccordionItem key={element.id} value={element.id}>
+              <AccordionTrigger className="text-sm">
+                <span className="flex items-center gap-2">
+                  <element.icon className="h-4 w-4" />
+                  {element.label}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ElementsList type={element.id} />
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </div>
     </Card>
   );

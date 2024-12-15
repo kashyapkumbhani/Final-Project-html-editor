@@ -61,14 +61,20 @@ export function Preview({ mode }: PreviewProps) {
           }}
         />
         <style>{`
-          [data-preview] * {
+          * {
             outline: 1px solid transparent;
-            transition: outline 0.2s ease;
+            transition: all 0.2s ease;
           }
-          [data-preview] *:hover {
-            outline: 2px solid #3b82f6;
+          .element-hover {
+            outline: 2px solid #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.1);
           }
-          [data-preview] *:focus {
+          .element-highlight {
+            outline: 3px solid #2563eb !important;
+            outline-offset: 2px;
+            background-color: rgba(37, 99, 235, 0.1);
+          }
+          *:focus {
             outline: 2px solid #2563eb;
             outline-offset: 2px;
           }
