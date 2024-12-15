@@ -5,6 +5,7 @@ import { CodeEditor } from "@/components/editor/CodeEditor";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { Preview } from "@/components/editor/Preview";
 import { Toolbar } from "@/components/editor/Toolbar";
+import { ElementPalette } from "@/components/editor/ElementPalette";
 import { useToast } from "@/hooks/use-toast";
 import { useEditorStore } from "@/lib/editor-store";
 
@@ -64,7 +65,13 @@ export default function Editor() {
       />
       
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        <ResizablePanel defaultSize={50}>
+        <ResizablePanel defaultSize={15} minSize={10}>
+          <ElementPalette />
+        </ResizablePanel>
+
+        <ResizableHandle />
+
+        <ResizablePanel defaultSize={45}>
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel defaultSize={70}>
               <VisualEditor />
@@ -78,13 +85,13 @@ export default function Editor() {
         
         <ResizableHandle />
         
-        <ResizablePanel defaultSize={25}>
+        <ResizablePanel defaultSize={20}>
           <PropertiesPanel />
         </ResizablePanel>
         
         <ResizableHandle />
         
-        <ResizablePanel defaultSize={25}>
+        <ResizablePanel defaultSize={20}>
           <Preview mode={previewMode} />
         </ResizablePanel>
       </ResizablePanelGroup>
