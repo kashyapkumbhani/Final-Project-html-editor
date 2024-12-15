@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Monitor,
@@ -7,7 +8,14 @@ import {
   Download,
   Undo,
   Redo,
+  Code,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useEditorStore } from "@/lib/editor-store";
 
 interface ToolbarProps {
@@ -23,7 +31,8 @@ export function Toolbar({
   previewMode,
   onPreviewModeChange,
 }: ToolbarProps) {
-  const { canUndo, canRedo, undo, redo } = useEditorStore();
+  const { canUndo, canRedo, undo, redo, html } = useEditorStore();
+  const [showHtml, setShowHtml] = useState(false);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,6 +108,29 @@ export function Toolbar({
       >
         <Smartphone className="h-4 w-4" />
       </Button>
+
+      <div className="w-px h-6 bg-border mx-2" />
+      
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setShowHtml(true)}
+      >
+        <Code className="h-4 w-4" />
+      </Button>
+
+      <Dialog open={showHtml} onOpenChange={setShowHtml}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>HTML Code</DialogTitle>
+          </DialogHeader>
+          <div className="overflow-auto">
+            <pre className="p-4 bg-muted rounded-lg whitespace-pre-wrap text-sm">
+              {html}
+            </pre>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

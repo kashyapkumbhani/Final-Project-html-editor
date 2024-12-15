@@ -51,77 +51,110 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
 }
 
 function ElementsList({ type }: { type: string }) {
-  const { html, setSelectedElement } = useEditorStore();
+  const { html, setHtml, setSelectedElement } = useEditorStore();
   const [elements, setElements] = useState<HTMLElement[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    // Parse the HTML to get all elements of the specified type
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const foundElements = Array.from(doc.getElementsByTagName(type));
+    foundElements.forEach((el, index) => {
+      if (!el.getAttribute('data-element-id')) {
+        el.setAttribute('data-element-id', `${type}-${index}`);
+      }
+    });
     setElements(foundElements as HTMLElement[]);
   }, [html, type]);
 
-  const handleElementClick = (element: HTMLElement) => {
+  const handleElementClick = (element: HTMLElement, index: number) => {
     const previewFrame = document.querySelector('iframe');
     if (previewFrame && previewFrame.contentDocument) {
+      const elementId = element.getAttribute('data-element-id');
       const elementInPreview = previewFrame.contentDocument.querySelector(
-        `[data-element-id="${element.getAttribute('data-element-id')}"]`
+        `[data-element-id="${elementId}"]`
       ) as HTMLElement;
       
       if (elementInPreview) {
-        // Highlight the element
+        // Remove previous highlight
         const prevHighlighted = previewFrame.contentDocument.querySelector('.element-highlight');
         if (prevHighlighted) {
           prevHighlighted.classList.remove('element-highlight');
         }
+        
+        // Add highlight
         elementInPreview.classList.add('element-highlight');
         
-        // Scroll the element into view
-        elementInPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Make element editable
-        elementInPreview.contentEditable = 'true';
-        elementInPreview.focus();
+        // Scroll into view
+        elementInPreview.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center'
+        });
         
         setSelectedElement(elementInPreview);
+        setEditingIndex(index);
       }
+    }
+  };
+
+  const handleTextEdit = (index: number, newText: string) => {
+    const updatedElements = [...elements];
+    updatedElements[index].textContent = newText;
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const elementToUpdate = doc.querySelector(`[data-element-id="${elements[index].getAttribute('data-element-id')}"]`);
+    
+    if (elementToUpdate) {
+      elementToUpdate.textContent = newText;
+      setHtml(doc.documentElement.outerHTML);
     }
   };
 
   return (
     <div className="space-y-2 pl-4">
       {elements.map((element, index) => (
-        <Button
-          key={index}
-          variant="ghost"
-          className="w-full justify-start text-sm"
-          onClick={() => handleElementClick(element)}
-          onMouseEnter={() => {
-            const previewFrame = document.querySelector('iframe');
-            if (previewFrame?.contentDocument) {
-              const elementInPreview = previewFrame.contentDocument.querySelector(
-                `[data-element-id="${element.getAttribute('data-element-id')}"]`
-              ) as HTMLElement;
-              if (elementInPreview) {
-                elementInPreview.classList.add('element-hover');
+        <div key={index} className="flex flex-col gap-2">
+          <div
+            className={`p-2 rounded hover:bg-accent cursor-pointer ${editingIndex === index ? 'bg-accent' : ''}`}
+            onClick={() => handleElementClick(element, index)}
+            onMouseEnter={() => {
+              const previewFrame = document.querySelector('iframe');
+              if (previewFrame?.contentDocument) {
+                const elementInPreview = previewFrame.contentDocument.querySelector(
+                  `[data-element-id="${element.getAttribute('data-element-id')}"]`
+                ) as HTMLElement;
+                if (elementInPreview) {
+                  elementInPreview.classList.add('element-hover');
+                }
               }
-            }
-          }}
-          onMouseLeave={() => {
-            const previewFrame = document.querySelector('iframe');
-            if (previewFrame?.contentDocument) {
-              const elementInPreview = previewFrame.contentDocument.querySelector(
-                `[data-element-id="${element.getAttribute('data-element-id')}"]`
-              ) as HTMLElement;
-              if (elementInPreview) {
-                elementInPreview.classList.remove('element-hover');
+            }}
+            onMouseLeave={() => {
+              const previewFrame = document.querySelector('iframe');
+              if (previewFrame?.contentDocument) {
+                const elementInPreview = previewFrame.contentDocument.querySelector(
+                  `[data-element-id="${element.getAttribute('data-element-id')}"]`
+                ) as HTMLElement;
+                if (elementInPreview) {
+                  elementInPreview.classList.remove('element-hover');
+                }
               }
-            }
-          }}
-        >
-          {element.textContent || `${type} ${index + 1}`}
-        </Button>
+            }}
+          >
+            <input
+              type="text"
+              value={element.textContent || ''}
+              onChange={(e) => handleTextEdit(index, e.target.value)}
+              className="w-full bg-transparent border-none focus:outline-none text-sm"
+              placeholder={`${type} ${index + 1}`}
+            />
+          </div>
+          {editingIndex === index && (
+            <div className="text-xs text-muted-foreground pl-2">
+              Click outside to save changes
+            </div>
+          )}
+        </div>
       ))}
       {elements.length === 0 && (
         <p className="text-sm text-muted-foreground pl-2">No {type} elements found</p>
