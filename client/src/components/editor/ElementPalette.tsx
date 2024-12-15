@@ -16,13 +16,8 @@ import {
 const elements = [
   { id: "text", type: "p", icon: Type, label: "Paragraph" },
   { id: "h1", type: "h1", icon: Heading1, label: "Heading 1" },
-  { id: "h2", type: "h2", icon: Heading2, label: "Heading 2" },
   { id: "button", type: "button", icon: Square, label: "Button" },
-  { id: "input", type: "input", icon: FormInput, label: "Input" },
-  { id: "link", type: "a", icon: Link, label: "Link" },
-  { id: "image", type: "img", icon: Image, label: "Image" },
-  { id: "list", type: "ul", icon: ListOrdered, label: "List" },
-  { id: "div", type: "div", icon: Container, label: "Container" }
+  { id: "input", type: "input", icon: FormInput, label: "Input" }
 ];
 
 function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any; label: string }) {
