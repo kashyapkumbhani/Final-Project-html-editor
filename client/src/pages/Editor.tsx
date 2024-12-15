@@ -30,8 +30,34 @@ export default function Editor() {
   };
 
   const handleFileExport = () => {
-    const html = useEditorStore.getState().html;
-    const blob = new Blob([html], { type: "text/html" });
+    const currentHtml = useEditorStore.getState().html;
+    
+    // Create a complete HTML document with styles
+    const fullHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exported HTML</title>
+    <style>
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 1rem;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        /* Preserve custom styles from elements */
+        ${Array.from(document.getElementsByTagName('style')).map(style => style.innerHTML).join('\n')}
+    </style>
+</head>
+<body>
+    ${currentHtml}
+</body>
+</html>`;
+
+    // Create and trigger download
+    const blob = new Blob([fullHtml], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -40,7 +66,7 @@ export default function Editor() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    alert("File exported successfully");
+    alert("File exported successfully with all updates");
   };
 
   return (
