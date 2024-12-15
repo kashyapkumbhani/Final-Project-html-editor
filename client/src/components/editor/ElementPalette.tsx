@@ -52,56 +52,69 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
 
 function ElementsList({ tag }: { tag: string }) {
   const { html, setHtml } = useEditorStore();
-  const [elements, setElements] = useState<Element[]>([]);
+  const [elements, setElements] = useState<Array<{ id: string; text: string }>>([]);
 
+  // Function to scan HTML and update elements list
+  const scanHtml = () => {
+    // Create a temporary div to parse HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Find all elements of the specified tag
+    const foundElements = Array.from(tempDiv.getElementsByTagName(tag));
+    
+    // Map elements to our format with IDs
+    const mappedElements = foundElements.map(el => {
+      let id = el.getAttribute('data-element-id');
+      if (!id) {
+        id = `${tag}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        el.setAttribute('data-element-id', id);
+      }
+      return {
+        id,
+        text: el.textContent || ''
+      };
+    });
+
+    setElements(mappedElements);
+
+    // Update HTML if we added any IDs
+    if (foundElements.some(el => el.getAttribute('data-element-id'))) {
+      setHtml(tempDiv.innerHTML);
+    }
+  };
+
+  // Scan HTML whenever it changes
   useEffect(() => {
-    // Parse HTML and find elements
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const foundElements = Array.from(doc.getElementsByTagName(tag));
-    setElements(foundElements);
-  }, [html, tag]);
+    scanHtml();
+  }, [html]);
 
-  const updateElement = (element: Element, newText: string) => {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Find the element by its ID
-    const elementId = element.getAttribute('data-element-id');
-    if (!elementId) return;
-    
-    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
-    if (!elementToUpdate) return;
-    
-    // Update the text content
-    elementToUpdate.textContent = newText;
-    
-    // Update the HTML in the store
-    setHtml(doc.documentElement.outerHTML);
+  const updateElementText = (elementId: string, newText: string) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    const elementToUpdate = tempDiv.querySelector(`[data-element-id="${elementId}"]`);
+    if (elementToUpdate) {
+      elementToUpdate.textContent = newText;
+      setHtml(tempDiv.innerHTML);
+    }
   };
 
   return (
-    <div className="space-y-2 p-2">
-      {elements.map((element, index) => {
-        // Ensure element has an ID
-        if (!element.getAttribute('data-element-id')) {
-          element.setAttribute('data-element-id', `${tag}-${Date.now()}-${index}`);
-        }
-
-        return (
-          <div 
-            key={element.getAttribute('data-element-id')} 
-            className="flex items-center gap-2 bg-background/50 p-2 rounded-md hover:bg-accent"
-          >
-            <Input
-              defaultValue={element.textContent || ''}
-              onBlur={(e) => updateElement(element, e.target.value)}
-              className="h-8 text-sm"
-              placeholder={`Edit ${tag} text`}
-            />
-          </div>
-        );
-      })}
+    <div className="space-y-2 p-2 max-h-[200px] overflow-y-auto">
+      {elements.map((element) => (
+        <div 
+          key={element.id}
+          className="flex items-center gap-2 bg-background/50 p-2 rounded-md hover:bg-accent"
+        >
+          <Input
+            value={element.text}
+            onChange={(e) => updateElementText(element.id, e.target.value)}
+            className="h-8 text-sm"
+            placeholder={`Edit ${tag} text`}
+          />
+        </div>
+      ))}
       {elements.length === 0 && (
         <div className="text-sm text-muted-foreground px-2">
           No {tag} elements found
@@ -113,8 +126,8 @@ function ElementsList({ tag }: { tag: string }) {
 
 export function ElementPalette() {
   return (
-    <Card className="h-1/2 overflow-auto">
-      <div className="p-4">
+    <Card className="h-1/2 overflow-hidden flex flex-col">
+      <div className="p-4 flex-shrink-0">
         <h3 className="font-medium mb-4">Page Elements</h3>
         
         {/* Draggable Elements */}
@@ -129,12 +142,14 @@ export function ElementPalette() {
             />
           ))}
         </div>
+      </div>
 
-        {/* Existing Elements */}
+      {/* Existing Elements */}
+      <div className="flex-1 overflow-y-auto">
         <Accordion type="multiple" className="w-full">
           {elementTypes.map((element) => (
             <AccordionItem key={element.id} value={element.id}>
-              <AccordionTrigger className="text-sm">
+              <AccordionTrigger className="text-sm px-4">
                 {element.label}s
               </AccordionTrigger>
               <AccordionContent>
