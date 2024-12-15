@@ -30,69 +30,91 @@ export default function Editor() {
   };
 
   const handleFileExport = () => {
-    // Get the preview iframe to extract the latest HTML
-    const previewFrame = document.querySelector('iframe');
-    if (!previewFrame?.contentDocument) {
-      alert("Error: Could not access preview content");
-      return;
-    }
-
-    // Get all elements from the preview
-    const elements = Array.from(previewFrame.contentDocument.body.children);
+    // Get the latest HTML from the editor store
+    const { html } = useEditorStore.getState();
     
-    // Create a temporary container to preserve styles and attributes
-    const tempContainer = document.createElement('div');
+    // Create a temporary document to parse and process the HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Clean up editor-specific attributes from all elements
+    const elements = doc.querySelectorAll('*');
     elements.forEach(el => {
-      const clone = el.cloneNode(true) as HTMLElement;
-      // Remove editor-specific attributes
-      clone.removeAttribute('contenteditable');
-      tempContainer.appendChild(clone);
+      el.removeAttribute('contenteditable');
+      el.removeAttribute('data-element-id');
+      
+      // Remove editor-specific classes
+      if (el.classList.contains('element-hover')) el.classList.remove('element-hover');
+      if (el.classList.contains('element-highlight')) el.classList.remove('element-highlight');
     });
 
-    // Get computed styles for each element
-    const styleSheet = new Set<string>();
-    elements.forEach(el => {
-      const computedStyle = window.getComputedStyle(el as HTMLElement);
-      let elementStyles = '';
-      Array.from(computedStyle).forEach(prop => {
-        const value = computedStyle.getPropertyValue(prop);
-        if (value) {
-          elementStyles += `${prop}: ${value};\n`;
+    // Get all styles from the preview frame
+    const previewFrame = document.querySelector('iframe');
+    const styleRules = new Set<string>();
+    
+    if (previewFrame?.contentDocument) {
+      // Collect styles from the preview iframe
+      const sheets = previewFrame.contentDocument.styleSheets;
+      Array.from(sheets).forEach(sheet => {
+        try {
+          Array.from(sheet.cssRules).forEach(rule => {
+            if (!rule.cssText.includes('element-hover') && !rule.cssText.includes('element-highlight')) {
+              styleRules.add(rule.cssText);
+            }
+          });
+        } catch (e) {
+          console.warn('Could not access stylesheet rules', e);
         }
       });
-      if (elementStyles) {
-        const elementId = (el as HTMLElement).getAttribute('data-element-id');
-        if (elementId) {
-          styleSheet.add(`
-            [data-element-id="${elementId}"] {
-              ${elementStyles}
+      
+      // Get computed styles for elements
+      elements.forEach(el => {
+        if (el.nodeType === Node.ELEMENT_NODE) {
+          const computedStyle = window.getComputedStyle(el as HTMLElement);
+          const elementStyles = new Set<string>();
+          
+          ['color', 'background-color', 'font-family', 'font-size', 'font-weight',
+           'margin', 'padding', 'border', 'width', 'height', 'display', 'position',
+           'top', 'left', 'right', 'bottom', 'z-index', 'flex', 'grid',
+           'transform', 'transition', 'animation'].forEach(prop => {
+            const value = computedStyle.getPropertyValue(prop);
+            if (value && value !== 'none' && value !== 'auto') {
+              elementStyles.add(`${prop}: ${value};`);
             }
-          `);
+          });
+          
+          if (elementStyles.size > 0) {
+            const selector = el.tagName.toLowerCase() + 
+                           (el.id ? `#${el.id}` : '') + 
+                           (el.className ? `.${el.className.split(' ').join('.')}` : '');
+            styleRules.add(`${selector} { ${Array.from(elementStyles).join(' ')} }`);
+          }
         }
-      }
-    });
+      });
+    }
 
-    // Create the complete HTML document
-    const fullHtml = `
-<!DOCTYPE html>
+    // Create the complete HTML document with all styles and content
+    const fullHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exported HTML</title>
+    <title>Visual HTML Editor Export</title>
     <style>
         /* Base styles */
         body {
             margin: 0;
             padding: 1rem;
             font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
         }
-        /* Computed styles */
-        ${Array.from(styleSheet).join('\n')}
+        
+        /* Exported styles */
+        ${Array.from(styleRules).join('\n        ')}
     </style>
 </head>
 <body>
-    ${tempContainer.innerHTML}
+    ${doc.body.innerHTML}
 </body>
 </html>`;
 
@@ -106,7 +128,6 @@ export default function Editor() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    alert("File exported successfully with all updates");
   };
 
   return (
