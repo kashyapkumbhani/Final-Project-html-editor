@@ -21,8 +21,13 @@ export function PropertiesPanel() {
       const commonProperties = [
         'color', 'background-color', 'font-size', 'font-weight',
         'margin', 'padding', 'border', 'width', 'height',
-        'display', 'position', 'text-align'
+        'display', 'position', 'text-align', 'border-radius',
+        'opacity', 'line-height', 'letter-spacing',
+        'text-decoration', 'text-transform', 'box-shadow',
+        'z-index', 'overflow', 'cursor'
       ];
+
+  const colorProperties = ['color', 'background-color', 'border-color'];
       
       commonProperties.forEach(prop => {
         styleObj[prop] = selectedElement.style[prop as any] || computedStyles.getPropertyValue(prop);
@@ -52,31 +57,40 @@ export function PropertiesPanel() {
             Object.entries(styles).map(([property, value]) => (
               <div key={property}>
                 <Label>{property}</Label>
-                {property.includes('color') ? (
+                {colorProperties.includes(property) ? (
                   <div className="flex items-center gap-2">
                     <Input 
                       value={value}
                       onChange={(e) => {
                         if (selectedElement) {
-                          selectedElement.style[property as any] = e.target.value;
-                          setHtml(document.querySelector('[data-visual-editor]')?.innerHTML || '');
+                          const newValue = e.target.value;
+                          selectedElement.style[property as any] = newValue;
+                          setStyles(prev => ({ ...prev, [property]: newValue }));
+                          const editor = document.querySelector('[data-visual-editor]');
+                          if (editor) {
+                            setHtml(editor.innerHTML);
+                          }
                         }
                       }}
                     />
                     <Popover>
-                      <PopoverTrigger>
+                      <PopoverTrigger asChild>
                         <div 
-                          className="w-8 h-8 rounded border cursor-pointer" 
+                          className="w-8 h-8 rounded border cursor-pointer hover:border-primary" 
                           style={{ backgroundColor: value }}
                         />
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-2">
                         <HexColorPicker
                           color={value}
                           onChange={(color) => {
                             if (selectedElement) {
                               selectedElement.style[property as any] = color;
-                              setHtml(document.querySelector('[data-visual-editor]')?.innerHTML || '');
+                              setStyles(prev => ({ ...prev, [property]: color }));
+                              const editor = document.querySelector('[data-visual-editor]');
+                              if (editor) {
+                                setHtml(editor.innerHTML);
+                              }
                             }
                           }}
                         />
@@ -88,10 +102,17 @@ export function PropertiesPanel() {
                     value={value}
                     onChange={(e) => {
                       if (selectedElement) {
-                        selectedElement.style[property as any] = e.target.value;
-                        setHtml(document.querySelector('[data-visual-editor]')?.innerHTML || '');
+                        const newValue = e.target.value;
+                        selectedElement.style[property as any] = newValue;
+                        setStyles(prev => ({ ...prev, [property]: newValue }));
+                        const editor = document.querySelector('[data-visual-editor]');
+                        if (editor) {
+                          setHtml(editor.innerHTML);
+                        }
                       }
                     }}
+                    className="font-mono"
+                    placeholder={`Enter ${property}`}
                   />
                 )}
               </div>
