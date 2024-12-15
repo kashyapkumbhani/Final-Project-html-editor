@@ -22,8 +22,15 @@ export function VisualEditor() {
 
   const finishEditing = () => {
     if (editingElement) {
-      const updatedHtml = updateHtml(html, editingElement);
-      setHtml(updatedHtml);
+      const doc = parseHtml(html);
+      const xpath = getXPath(editingElement);
+      const elementInDoc = evaluateXPath(doc, xpath);
+      
+      if (elementInDoc) {
+        elementInDoc.innerHTML = editingElement.innerHTML;
+        setHtml(doc.documentElement.outerHTML);
+      }
+      
       setEditingElement(null);
     }
   };
