@@ -7,6 +7,8 @@ import { useEditorStore } from "@/lib/editor-store";
 import { HexColorPicker } from "react-colorful";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
+const colorProperties = ['color', 'background-color', 'border-color'];
+
 export function PropertiesPanel() {
   const { selectedElement, html, setHtml } = useEditorStore();
   const [styles, setStyles] = useState<Record<string, string>>({});
@@ -26,8 +28,6 @@ export function PropertiesPanel() {
         'text-decoration', 'text-transform', 'box-shadow',
         'z-index', 'overflow', 'cursor'
       ];
-
-  const colorProperties = ['color', 'background-color', 'border-color'];
       
       commonProperties.forEach(prop => {
         styleObj[prop] = selectedElement.style[prop as any] || computedStyles.getPropertyValue(prop);
