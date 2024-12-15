@@ -1,10 +1,12 @@
 import { create } from 'zustand';
+import { getXPath, evaluateXPath } from './html-utils';
 
 interface EditorStore {
   html: string;
   setHtml: (html: string) => void;
   selectedElement: HTMLElement | null;
   setSelectedElement: (element: HTMLElement | null) => void;
+  updateElementStyle: (property: string, value: string) => void;
   history: string[];
   currentIndex: number;
   canUndo: boolean;
@@ -28,6 +30,17 @@ export const useEditorStore = create<EditorStore>((set, get) => ({
   },
   selectedElement: null,
   setSelectedElement: (element) => set({ selectedElement: element }),
+  updateElementStyle: (property, value) => {
+    const { selectedElement, setHtml } = get();
+    if (selectedElement) {
+      selectedElement.style[property as any] = value;      
+      // Get the updated HTML from the visual editor
+      const editor = document.querySelector('[data-visual-editor]');
+      if (editor) {
+        setHtml(editor.innerHTML);
+      }
+    }
+  },
   history: ['<!DOCTYPE html><html><head><title>Visual HTML Editor</title></head><body></body></html>'],
   currentIndex: 0,
   canUndo: false,

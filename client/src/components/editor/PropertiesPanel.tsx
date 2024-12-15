@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 const colorProperties = ['color', 'background-color', 'border-color'];
 
 export function PropertiesPanel() {
-  const { selectedElement, html, setHtml } = useEditorStore();
+  const { selectedElement, updateElementStyle } = useEditorStore();
   const [styles, setStyles] = useState<Record<string, string>>({});
   const [attributes, setAttributes] = useState<Record<string, string>>({});
 
@@ -44,8 +44,21 @@ export function PropertiesPanel() {
     }
   }, [selectedElement]);
 
+  const handleStyleChange = (property: string, value: string) => {
+    updateElementStyle(property, value);
+    setStyles(prev => ({ ...prev, [property]: value }));
+  };
+
+  if (!selectedElement) {
+    return (
+      <Card className="h-full overflow-auto p-4">
+        <p className="text-muted-foreground">Select an element to edit properties</p>
+      </Card>
+    );
+  }
+
   return (
-    <Card className={`h-full overflow-auto transition-opacity duration-200 ${!selectedElement ? 'opacity-50' : 'opacity-100'}`}>
+    <Card className="h-full overflow-auto">
       <Tabs defaultValue="styles">
         <TabsList className="w-full">
           <TabsTrigger value="styles" className="flex-1">Styles</TabsTrigger>
@@ -53,104 +66,61 @@ export function PropertiesPanel() {
         </TabsList>
         
         <TabsContent value="styles" className="p-4 space-y-4">
-          {selectedElement ? (
-            Object.entries(styles).map(([property, value]) => (
-              <div key={property}>
-                <Label>{property}</Label>
-                {colorProperties.includes(property) ? (
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      value={value}
-                      onChange={(e) => {
-                        if (selectedElement) {
-                          const newValue = e.target.value;
-                          selectedElement.style[property as any] = newValue;
-                          setStyles(prev => ({ ...prev, [property]: newValue }));
-                          const editor = document.querySelector('[data-visual-editor]');
-                          if (editor) {
-                            const updatedHtml = editor.innerHTML;
-                            // Force a re-render by creating a new HTML string
-                            setHtml(`${updatedHtml}`);
-                          }
-                        }
-                      }}
-                    />
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <div 
-                          className="w-8 h-8 rounded border cursor-pointer hover:border-primary" 
-                          style={{ backgroundColor: value }}
-                        />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-2">
-                        <HexColorPicker
-                          color={value}
-                          onChange={(color) => {
-                            if (selectedElement) {
-                              selectedElement.style[property as any] = color;
-                              setStyles(prev => ({ ...prev, [property]: color }));
-                              
-                              // Update the editor's HTML content to reflect style changes
-                              const editor = document.querySelector('[data-visual-editor]');
-                              if (editor) {
-                                const updatedHtml = editor.innerHTML;
-                                // Force a re-render by creating a new HTML string
-                                setHtml(`${updatedHtml}`);
-                              }
-                            }
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                ) : (
+          {Object.entries(styles).map(([property, value]) => (
+            <div key={property}>
+              <Label>{property}</Label>
+              {colorProperties.includes(property) ? (
+                <div className="flex items-center gap-2">
                   <Input 
                     value={value}
-                    onChange={(e) => {
-                      if (selectedElement) {
-                        const newValue = e.target.value;
-                        selectedElement.style[property as any] = newValue;
-                        setStyles(prev => ({ ...prev, [property]: newValue }));
-                        
-                        // Update the editor's HTML content to reflect style changes
-                        const editor = document.querySelector('[data-visual-editor]');
-                        if (editor) {
-                          const updatedHtml = editor.innerHTML;
-                          // Force a re-render by creating a new HTML string
-                          setHtml(`${updatedHtml}`);
-                        }
-                      }
-                    }}
-                    className="font-mono"
-                    placeholder={`Enter ${property}`}
+                    onChange={(e) => handleStyleChange(property, e.target.value)}
                   />
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground">Select an element to edit styles</p>
-          )}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <div 
+                        className="w-8 h-8 rounded border cursor-pointer hover:border-primary" 
+                        style={{ backgroundColor: value }}
+                      />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-2">
+                      <HexColorPicker
+                        color={value}
+                        onChange={(color) => handleStyleChange(property, color)}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              ) : (
+                <Input 
+                  value={value}
+                  onChange={(e) => handleStyleChange(property, e.target.value)}
+                  className="font-mono"
+                  placeholder={`Enter ${property}`}
+                />
+              )}
+            </div>
+          ))}
         </TabsContent>
         
         <TabsContent value="attributes" className="p-4 space-y-4">
-          {selectedElement ? (
-            Object.entries(attributes).map(([name, value]) => (
-              <div key={name}>
-                <Label>{name}</Label>
-                <Input 
-                  value={value}
-                  onChange={(e) => {
-                    if (selectedElement) {
-                      selectedElement.setAttribute(name, e.target.value);
-                      setHtml(document.querySelector('[data-visual-editor]')?.innerHTML || '');
+          {Object.entries(attributes).map(([name, value]) => (
+            <div key={name}>
+              <Label>{name}</Label>
+              <Input 
+                value={value}
+                onChange={(e) => {
+                  if (selectedElement) {
+                    selectedElement.setAttribute(name, e.target.value);
+                    const editor = document.querySelector('[data-visual-editor]');
+                    if (editor) {
+                      const { setHtml } = useEditorStore.getState();
+                      setHtml(editor.innerHTML);
                     }
-                  }}
-                />
-              </div>
-            ))
-          ) : (
-            <p className="text-muted-foreground">Select an element to edit attributes</p>
-          )}
+                  }
+                }}
+              />
+            </div>
+          ))}
         </TabsContent>
       </Tabs>
     </Card>
