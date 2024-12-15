@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { useDrag, useDrop } from "react-dnd";
+import { useDrop } from "react-dnd";
 import { useEditorStore } from "@/lib/editor-store";
-// Remove unused imports
 
 export function VisualEditor() {
   const { html, setHtml, selectedElement, setSelectedElement } = useEditorStore();
@@ -24,7 +23,6 @@ export function VisualEditor() {
     if (editingElement && editorRef.current) {
       editingElement.contentEditable = "false";
       setEditingElement(null);
-      // Update the entire HTML content
       setHtml(editorRef.current.innerHTML);
     }
   };
@@ -32,17 +30,23 @@ export function VisualEditor() {
   const handleElementClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const target = e.target as HTMLElement;
+    
+    // Don't select the editor container itself
+    if (target === editorRef.current) return;
+    
     setSelectedElement(target);
   };
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     const target = e.target as HTMLElement;
-    if (target.nodeType === Node.ELEMENT_NODE && target !== editorRef.current) {
-      target.contentEditable = "true";
-      target.focus();
-      setEditingElement(target);
-    }
+    
+    // Don't make the editor container editable
+    if (target === editorRef.current) return;
+    
+    target.contentEditable = "true";
+    target.focus();
+    setEditingElement(target);
   };
 
   const handleDrop = (item: any, monitor: any) => {
@@ -50,16 +54,33 @@ export function VisualEditor() {
     const editorBounds = editorRef.current?.getBoundingClientRect();
     
     if (editorBounds && clientOffset && editorRef.current) {
-      const element = document.createElement(item.type);
       const x = clientOffset.x - editorBounds.left;
       const y = clientOffset.y - editorBounds.top;
       
-      if (item.type === 'p') {
-        element.textContent = 'Double-click to edit text';
-      } else if (item.type === 'button') {
-        element.textContent = 'Button';
+      let element: HTMLElement;
+      
+      switch (item.type) {
+        case 'p':
+          element = document.createElement('p');
+          element.textContent = 'Double-click to edit text';
+          break;
+        case 'button':
+          element = document.createElement('button');
+          element.textContent = 'Button';
+          element.className = 'px-4 py-2 bg-blue-500 text-white rounded';
+          break;
+        case 'input':
+          element = document.createElement('input');
+          element.placeholder = 'Enter text...';
+          element.className = 'px-4 py-2 border rounded';
+          break;
+        default:
+          element = document.createElement('div');
+          element.textContent = 'New Element';
       }
       
+      // Assign a unique ID for selection tracking
+      element.setAttribute('data-element-id', `el-${Date.now()}`);
       element.style.position = 'absolute';
       element.style.left = `${x}px`;
       element.style.top = `${y}px`;
@@ -70,7 +91,7 @@ export function VisualEditor() {
   };
 
   const [{ isOver }, drop] = useDrop(() => ({
-    accept: ['div', 'p', 'button', 'input', 'form'],
+    accept: ['p', 'button', 'input'],
     drop: handleDrop,
     collect: (monitor) => ({
       isOver: monitor.isOver(),
@@ -78,13 +99,13 @@ export function VisualEditor() {
   }));
 
   return (
-    <Card className="h-full overflow-auto relative p-4">
+    <Card className="h-full overflow-auto">
       <div 
         ref={(node) => {
           drop(node);
-          editorRef.current = node;
+          if (node) editorRef.current = node;
         }}
-        className="min-h-full relative"
+        className="min-h-full p-4"
         data-visual-editor
         onClick={handleElementClick}
         onDoubleClick={handleDoubleClick}
