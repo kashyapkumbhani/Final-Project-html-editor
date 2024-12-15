@@ -68,7 +68,9 @@ export function PropertiesPanel() {
                           setStyles(prev => ({ ...prev, [property]: newValue }));
                           const editor = document.querySelector('[data-visual-editor]');
                           if (editor) {
-                            setHtml(editor.innerHTML);
+                            const updatedHtml = editor.innerHTML;
+                            // Force a re-render by creating a new HTML string
+                            setHtml(`${updatedHtml}`);
                           }
                         }
                       }}
@@ -87,9 +89,13 @@ export function PropertiesPanel() {
                             if (selectedElement) {
                               selectedElement.style[property as any] = color;
                               setStyles(prev => ({ ...prev, [property]: color }));
+                              
+                              // Update the editor's HTML content to reflect style changes
                               const editor = document.querySelector('[data-visual-editor]');
                               if (editor) {
-                                setHtml(editor.innerHTML);
+                                const updatedHtml = editor.innerHTML;
+                                // Force a re-render by creating a new HTML string
+                                setHtml(`${updatedHtml}`);
                               }
                             }
                           }}
@@ -105,9 +111,13 @@ export function PropertiesPanel() {
                         const newValue = e.target.value;
                         selectedElement.style[property as any] = newValue;
                         setStyles(prev => ({ ...prev, [property]: newValue }));
+                        
+                        // Update the editor's HTML content to reflect style changes
                         const editor = document.querySelector('[data-visual-editor]');
                         if (editor) {
-                          setHtml(editor.innerHTML);
+                          const updatedHtml = editor.innerHTML;
+                          // Force a re-render by creating a new HTML string
+                          setHtml(`${updatedHtml}`);
                         }
                       }
                     }}

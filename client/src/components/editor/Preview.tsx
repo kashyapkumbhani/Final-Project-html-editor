@@ -29,6 +29,7 @@ export function Preview({ mode }: PreviewProps) {
           srcDoc={html}
           className="w-full h-full border-0"
           title="Preview"
+          key={html} // Force iframe to reload when html changes
         />
       </div>
     </Card>
