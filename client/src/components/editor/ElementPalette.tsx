@@ -52,66 +52,68 @@ function DraggableElement({ type, icon: Icon, label }: { type: string; icon: any
 
 function ElementsList({ tag }: { tag: string }) {
   const { html, setHtml } = useEditorStore();
-  const [elements, setElements] = useState<HTMLElement[]>([]);
+  const [elements, setElements] = useState<Element[]>([]);
 
   useEffect(() => {
+    // Parse HTML and find elements
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const foundElements = Array.from(doc.getElementsByTagName(tag));
-    setElements(foundElements as HTMLElement[]);
+    setElements(foundElements);
   }, [html, tag]);
 
-  const handleTextChange = (element: HTMLElement, newText: string) => {
+  const updateElement = (element: Element, newText: string) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    const elementId = element.getAttribute('data-element-id');
     
-    if (elementId) {
-      const targetElement = doc.querySelector(`[data-element-id="${elementId}"]`);
-      if (targetElement) {
-        targetElement.textContent = newText;
-        setHtml(doc.documentElement.outerHTML);
-      }
-    }
+    // Find the element by its ID
+    const elementId = element.getAttribute('data-element-id');
+    if (!elementId) return;
+    
+    const elementToUpdate = doc.querySelector(`[data-element-id="${elementId}"]`);
+    if (!elementToUpdate) return;
+    
+    // Update the text content
+    elementToUpdate.textContent = newText;
+    
+    // Update the HTML in the store
+    setHtml(doc.documentElement.outerHTML);
   };
-
-  if (elements.length === 0) {
-    return (
-      <div className="px-4 py-2 text-sm text-muted-foreground">
-        No {tag} elements found
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-2 p-2">
       {elements.map((element, index) => {
-        // Ensure element has a data-element-id
+        // Ensure element has an ID
         if (!element.getAttribute('data-element-id')) {
           element.setAttribute('data-element-id', `${tag}-${Date.now()}-${index}`);
         }
-        
+
         return (
           <div 
             key={element.getAttribute('data-element-id')} 
-            className="flex items-center gap-2 p-2 rounded-md hover:bg-accent group"
+            className="flex items-center gap-2 bg-background/50 p-2 rounded-md hover:bg-accent"
           >
             <Input
-              value={element.textContent || ''}
-              onChange={(e) => handleTextChange(element, e.target.value)}
+              defaultValue={element.textContent || ''}
+              onBlur={(e) => updateElement(element, e.target.value)}
               className="h-8 text-sm"
               placeholder={`Edit ${tag} text`}
             />
           </div>
         );
       })}
+      {elements.length === 0 && (
+        <div className="text-sm text-muted-foreground px-2">
+          No {tag} elements found
+        </div>
+      )}
     </div>
   );
 }
 
 export function ElementPalette() {
   return (
-    <Card className="h-full overflow-auto">
+    <Card className="h-1/2 overflow-auto">
       <div className="p-4">
         <h3 className="font-medium mb-4">Page Elements</h3>
         
