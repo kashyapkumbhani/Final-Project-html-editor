@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useToast } from "@/components/ui/toast";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { PropertiesPanel } from "@/components/editor/PropertiesPanel";
 import { Preview } from "@/components/editor/Preview";
@@ -8,6 +9,7 @@ import { useEditorStore } from "@/lib/editor-store";
 
 export default function Editor() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  const { toast } = useToast();
 
   const handleFileImport = async (file: File) => {
     try {
@@ -23,9 +25,19 @@ export default function Editor() {
       // Preserve the complete HTML structure including head section
       useEditorStore.getState().setHtml(text);
       
-      alert("File imported successfully");
+      toast({
+        title: "Success",
+        description: "File imported successfully",
+        className: "bg-green-500 border-green-600 text-white",
+        duration: 3000,
+      });
     } catch (error) {
-      alert("Error importing file. Please try again with a valid HTML file");
+      toast({
+        title: "Error",
+        description: "Error importing file. Please try again with a valid HTML file",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
   };
 
