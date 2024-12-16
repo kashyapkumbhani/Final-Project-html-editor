@@ -170,7 +170,7 @@ function ElementsList({ type }: { type: string }) {
   };
 
   return (
-    <div className="space-y-2 pl-4">
+    <div className="space-y-1">
       {elements.map((element) => {
         const elementId = element.getAttribute('data-element-id');
         const elementText = type === 'img' ? 
@@ -180,20 +180,22 @@ function ElementsList({ type }: { type: string }) {
         return (
           <div 
             key={elementId} 
-            className="flex items-center gap-2 p-2 rounded hover:bg-accent cursor-pointer"
+            className="flex items-center gap-2 px-2 py-1.5 rounded-sm hover:bg-accent cursor-pointer transition-colors duration-200 group"
             onClick={() => handleElementSelect(element)}
           >
-            <span className="text-xs text-muted-foreground font-mono">
+            <span className="text-xs text-muted-foreground font-mono group-hover:text-accent-foreground transition-colors duration-200">
               {type.toUpperCase()}
             </span>
-            <span className="text-sm truncate flex-1">
+            <span className="text-sm truncate flex-1 group-hover:text-accent-foreground transition-colors duration-200">
               {elementText}
             </span>
           </div>
         );
       })}
       {elements.length === 0 && (
-        <p className="text-sm text-muted-foreground pl-2">No {type} elements found</p>
+        <div className="py-2 px-2 text-sm text-muted-foreground animate-in fade-in-50">
+          No {type} elements found
+        </div>
       )}
     </div>
   );
@@ -214,35 +216,37 @@ export function ElementPalette() {
   }
 
   return (
-    <Card className="h-full overflow-auto">
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="elements">
-          <div className="px-4 pt-4">
-            <AccordionTrigger className="text-base font-medium">
-              Page Elements
-            </AccordionTrigger>
-          </div>
-          <AccordionContent>
-            <div className="px-4 pb-4">
-              <Accordion type="single" collapsible className="w-full">
-                {elementTypes.map((element) => (
-                  <AccordionItem key={element.id} value={element.id}>
-                    <AccordionTrigger className="text-sm">
-                      <span className="flex items-center gap-2">
-                        <element.icon className="h-4 w-4" />
-                        {element.label}
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <ElementsList type={element.id} />
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+    <Card className="h-full flex flex-col">
+      <div className="flex-none px-4 py-3 border-b">
+        <h3 className="font-medium">Page Elements</h3>
+      </div>
+      <div className="flex-1 overflow-auto">
+        <Accordion 
+          type="single" 
+          collapsible 
+          className="w-full transition-all duration-200 ease-in-out"
+        >
+          {elementTypes.map((element) => (
+            <AccordionItem 
+              key={element.id} 
+              value={element.id}
+              className="border-b last:border-b-0"
+            >
+              <AccordionTrigger className="px-4 py-2 text-sm hover:bg-accent/50 transition-colors duration-200">
+                <span className="flex items-center gap-2">
+                  <element.icon className="h-4 w-4" />
+                  {element.label}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent className="animate-accordion-down">
+                <div className="px-4 py-2">
+                  <ElementsList type={element.id} />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
     </Card>
   );
 }
