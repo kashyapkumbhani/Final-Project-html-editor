@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Monitor,
@@ -11,6 +11,8 @@ import {
   Code,
   Copy,
   X,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import {
@@ -143,7 +145,7 @@ export function Toolbar({
   };
 
   return (
-    <div className="border-b p-2 flex items-center gap-2">
+    <div className="p-2 flex items-center gap-2">
       <input
         type="file"
         accept=".html"
@@ -151,6 +153,25 @@ export function Toolbar({
         id="file-input"
         onChange={handleFileInput}
       />
+      
+      {/* Theme Toggle */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="w-9 h-9"
+        onClick={() => {
+          const html = document.documentElement;
+          const currentTheme = html.classList.contains('dark') ? 'light' : 'dark';
+          html.classList.remove('light', 'dark');
+          html.classList.add(currentTheme);
+          localStorage.setItem('theme', currentTheme);
+        }}
+      >
+        <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      </Button>
+      
+      <div className="w-px h-6 bg-border/40" />
       
       <Button
         variant="outline"

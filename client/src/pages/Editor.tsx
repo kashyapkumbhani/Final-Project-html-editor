@@ -143,8 +143,29 @@ export default function Editor() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      <div className="border-b bg-white flex-none">
+    <div className="h-screen flex flex-col bg-background relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient Orbs */}
+        <div className="absolute w-[800px] h-[800px] bg-purple-900/10 opacity-20 blur-[120px] top-[-400px] left-[-300px] rounded-full animate-pulse dark:opacity-10" />
+        <div className="absolute w-[600px] h-[600px] bg-cyan-800/10 opacity-20 blur-[100px] bottom-[-200px] right-[-300px] rounded-full animate-pulse dark:opacity-10" />
+        
+        {/* Geometric Shapes */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,#3B1F6E05,transparent)]" />
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-48 h-48 border border-purple-500/5 rounded-full" />
+          <div className="absolute top-3/4 right-1/4 w-64 h-64 border border-cyan-500/5 rounded-full" />
+        </div>
+        
+        {/* Grid Lines */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `linear-gradient(to right, rgba(99,102,241,0.03) 1px, transparent 1px),
+                           linear-gradient(to bottom, rgba(99,102,241,0.03) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }} />
+      </div>
+
+      <div className="border-b border-border/40 bg-background/95 backdrop-blur-sm flex-none relative z-10">
         <Toolbar
           onFileImport={handleFileImport}
           onFileExport={handleFileExport}
@@ -152,7 +173,8 @@ export default function Editor() {
           onPreviewModeChange={setPreviewMode}
         />
       </div>
-      <div className="flex-1 min-h-0"> {/* min-h-0 is crucial for nested flex containers */}
+
+      <div className="flex-1 min-h-0 relative z-10"> {/* min-h-0 is crucial for nested flex containers */}
         <ResizablePanelGroup direction="horizontal" className="h-full">
           <ResizablePanel defaultSize={25} minSize={20}>
             <div className="h-full flex flex-col min-h-0"> {/* min-h-0 allows proper flex behavior */}
@@ -164,7 +186,7 @@ export default function Editor() {
               </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle />
+          <ResizableHandle className="bg-border/40 w-px hover:bg-border/60 transition-colors" />
           <ResizablePanel defaultSize={75}>
             <div className="h-full overflow-hidden">
               <Preview mode={previewMode} />
