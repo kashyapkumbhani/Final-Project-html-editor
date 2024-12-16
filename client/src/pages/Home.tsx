@@ -112,8 +112,10 @@ export default function Home() {
                 Design and edit HTML visually with real-time preview, intuitive controls, and instant code generation.
               </motion.p>
               <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
-                <Link href="/editor" className="group relative px-8 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl text-black font-semibold text-lg inline-flex items-center gap-2 transition-all hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
-                  Start Creating <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Link href="/editor">
+                  <a className="group relative px-8 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl text-black font-semibold text-lg inline-flex items-center gap-2 transition-all hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
+                    Start Creating <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
                 </Link>
                 <button className="px-8 py-3 bg-white/5 rounded-xl border border-white/10 font-semibold text-lg hover:bg-white/10 transition-colors">
                   Learn More
@@ -299,8 +301,10 @@ export default function Home() {
                   Join thousands of developers who are already using Visual HTML Editor to streamline their workflow
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
-                  <Link href="/editor" className="px-8 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl text-black font-semibold text-lg inline-flex items-center gap-2 transition-all hover:scale-105">
-                    Launch Editor <ArrowRight className="w-5 h-5" />
+                  <Link href="/editor">
+                    <a className="px-8 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl text-black font-semibold text-lg inline-flex items-center gap-2 transition-all hover:scale-105">
+                      Launch Editor <ArrowRight className="w-5 h-5" />
+                    </a>
                   </Link>
                 </div>
               </div>
@@ -341,12 +345,9 @@ export default function Home() {
                 <ul className="space-y-2">
                   {column.links.map((link, linkIndex) => (
                     <li key={linkIndex}>
-                      <button
-                        onClick={() => window.location.href = '/editor'}
-                        className="text-white/60 hover:text-white transition-colors"
-                      >
+                      <a href="#" className="text-white/60 hover:text-white transition-colors">
                         {link}
-                      </button>
+                      </a>
                     </li>
                   ))}
                 </ul>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Switch, Route } from "wouter";
 import Editor from "@/pages/Editor";
 import Home from "@/pages/Home";
