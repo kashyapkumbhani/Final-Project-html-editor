@@ -105,7 +105,7 @@ export function Preview({ mode }: PreviewProps) {
   }, [html, selectedElement]);
 
   return (
-    <Card className="h-full overflow-auto flex items-center justify-center p-4">
+    <Card className="h-full overflow-hidden flex items-center justify-center p-4">
       <div
         style={{
           width: viewportSizes[mode],

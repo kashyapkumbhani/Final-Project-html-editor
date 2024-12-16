@@ -144,7 +144,7 @@ export default function Editor() {
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      <div className="border-b bg-white">
+      <div className="border-b bg-white flex-none">
         <Toolbar
           onFileImport={handleFileImport}
           onFileExport={handleFileExport}
@@ -152,19 +152,23 @@ export default function Editor() {
           onPreviewModeChange={setPreviewMode}
         />
       </div>
-      <div className="flex-1 flex">
-        <ResizablePanelGroup direction="horizontal" className="flex-1">
+      <div className="flex-1 min-h-0"> {/* min-h-0 is crucial for nested flex containers */}
+        <ResizablePanelGroup direction="horizontal" className="h-full">
           <ResizablePanel defaultSize={25} minSize={20}>
-            <div className="h-full flex flex-col">
-              <ElementPalette />
-              <div className="flex-1">
+            <div className="h-full flex flex-col min-h-0"> {/* min-h-0 allows proper flex behavior */}
+              <div className="flex-1 min-h-0 overflow-hidden"> {/* Contains ElementPalette */}
+                <ElementPalette />
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden"> {/* Contains PropertiesPanel */}
                 <PropertiesPanel />
               </div>
             </div>
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={75}>
-            <Preview mode={previewMode} />
+            <div className="h-full overflow-hidden">
+              <Preview mode={previewMode} />
+            </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

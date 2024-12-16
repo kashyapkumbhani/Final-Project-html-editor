@@ -216,15 +216,15 @@ export function ElementPalette() {
   }
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden">
       <div className="flex-none px-4 py-3 border-b">
         <h3 className="font-medium">Page Elements</h3>
       </div>
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400 transition-colors">
         <Accordion 
           type="single" 
           collapsible 
-          className="w-full transition-all duration-200 ease-in-out"
+          className="w-full transition-all duration-300 ease-in-out"
         >
           {elementTypes.map((element) => (
             <AccordionItem 
