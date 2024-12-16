@@ -8,9 +8,29 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 function App() {
   useEffect(() => {
     // Theme initialization
-    const theme = localStorage.getItem('theme') || 
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.classList.add(theme);
+    const root = document.documentElement;
+    const theme = localStorage.getItem('theme');
+    
+    if (theme) {
+      root.classList.add(theme);
+    } else {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const initialTheme = isDark ? 'dark' : 'light';
+      root.classList.add(initialTheme);
+      localStorage.setItem('theme', initialTheme);
+    }
+
+    // Listen for system theme changes
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem('theme')) {
+        root.classList.remove('light', 'dark');
+        root.classList.add(e.matches ? 'dark' : 'light');
+      }
+    };
+
+    mediaQuery.addEventListener('change', handleThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleThemeChange);
   }, []);
 
   return (
