@@ -1,336 +1,360 @@
-import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
+import { motion } from "framer-motion";
+import {
   Laptop,
   Paintbrush,
   Code,
-  Layers,
   Zap,
   Upload,
   Download,
   LayoutGrid,
   MousePointer2,
-  PenTool,
-  PlayCircle,
-  Star,
-  Clock,
-  Users,
+  ArrowRight,
   Sparkles,
-  ArrowRight
+  Layers,
+  Box,
+  Monitor,
+  GanttChart,
+  GitBranch,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
-const testimonials = [
-  {
-    name: "Sarah Johnson",
-    role: "Web Designer",
-    quote: "Transformed my workflow! The visual editing capabilities are incredible.",
-    avatar: "SJ"
-  },
-  {
-    name: "Mike Chen",
-    role: "Frontend Developer",
-    quote: "The best HTML editor for web designers I've ever used.",
-    avatar: "MC"
-  },
-  {
-    name: "Emily Davis",
-    role: "UI/UX Designer",
-    quote: "Perfect balance of visual editing and code control.",
-    avatar: "ED"
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+};
+
+const stagger = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
   }
-];
+};
 
 export default function Home() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
-  useEffect(() => {
-    setIsVisible(true);
-    const interval = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header */}
-      <header className="border-b bg-white/50 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Laptop className="h-6 w-6 text-primary" />
-            <span className="font-semibold text-xl">Visual HTML Editor</span>
-          </div>
-          <Link href="/editor">
-            <a className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-              Open Editor
-            </a>
-          </Link>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden selection:bg-purple-500/30 selection:text-white">
+      {/* Background Elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Gradient Orbs */}
+        <div className="absolute w-[1000px] h-[1000px] bg-purple-900/30 opacity-20 blur-[120px] top-[-400px] left-[-300px] rounded-full animate-pulse" />
+        <div className="absolute w-[800px] h-[800px] bg-cyan-800/30 opacity-20 blur-[100px] bottom-[-200px] right-[-300px] rounded-full animate-pulse" />
+        
+        {/* Geometric Shapes */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_200px,#3B1F6E,transparent)]" />
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-48 h-48 border border-purple-500/20 rounded-full" />
+          <div className="absolute top-3/4 right-1/4 w-64 h-64 border border-cyan-500/20 rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 border border-purple-500/10 rounded-full" />
         </div>
+        
+        {/* Grid Lines */}
+        <div className="absolute inset-0" style={{
+          backgroundImage: `linear-gradient(to right, #ffffff05 1px, transparent 1px),
+                           linear-gradient(to bottom, #ffffff05 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }} />
+      </div>
+
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl">
+        <nav className="container mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Laptop className="h-7 w-7 text-purple-400" />
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute -inset-1 bg-purple-500/20 rounded-full blur-sm"
+              />
+            </div>
+            <span className="font-bold text-xl bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+              Visual HTML Editor
+            </span>
+          </div>
+          <div className="flex items-center gap-6">
+            <Link href="/editor" className="relative group">
+              <div className="absolute -inset-2 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-200" />
+              <button className="relative px-6 py-2 bg-white/5 border border-white/10 rounded-lg font-medium text-sm text-white hover:text-white/90 transition-colors group-hover:border-white/20">
+                Launch Editor
+              </button>
+            </Link>
+          </div>
+        </nav>
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-        <div className="container mx-auto max-w-6xl relative">
+      <section className="min-h-screen pt-32 pb-24 px-6 relative z-10 flex items-center">
+        <div className="container mx-auto max-w-7xl">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
-            transition={{ duration: 0.6 }}
-            className="text-center"
+            variants={stagger}
+            initial="initial"
+            animate="animate"
+            className="grid lg:grid-cols-2 gap-12 items-center"
           >
-            <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/60 mb-6">
-              Design, Edit, and Export HTML Visually
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Simplify HTML editing with real-time preview, drag-and-drop features, and responsive design tools. All in one powerful browser-based editor.
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <Link href="/editor">
-                <a className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-all hover:gap-3 text-lg font-medium">
-                  Start Editing <MousePointer2 className="w-5 h-5" />
-                </a>
-              </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="inline-flex items-center gap-2"
+            <div className="text-left space-y-8">
+              <motion.h1 
+                variants={fadeInUp}
+                className="text-6xl lg:text-7xl xl:text-8xl font-bold"
               >
-                <PlayCircle className="w-5 h-5" />
-                Watch Demo
-              </Button>
+                <span className="block bg-gradient-to-r from-white to-white/70 bg-clip-text text-transparent">
+                  Visual HTML Editor
+                </span>
+                <span className="block mt-3 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                  for Modern Web
+                </span>
+              </motion.h1>
+              <motion.p 
+                variants={fadeInUp}
+                className="text-xl text-white/70 max-w-xl"
+              >
+                Design and edit HTML visually with real-time preview, intuitive controls, and instant code generation.
+              </motion.p>
+              <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
+                <Link href="/editor">
+                  <a className="group relative px-8 py-3 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl text-black font-semibold text-lg inline-flex items-center gap-2 transition-all hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
+                    Start Creating <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
+                </Link>
+                <button className="px-8 py-3 bg-white/5 rounded-xl border border-white/10 font-semibold text-lg hover:bg-white/10 transition-colors">
+                  Learn More
+                </button>
+              </motion.div>
             </div>
+            <motion.div
+              variants={fadeInUp}
+              className="relative lg:h-[600px] rounded-2xl border border-white/10 bg-black/50 backdrop-blur-sm overflow-hidden group"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-cyan-500/10" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Monitor className="w-32 h-32 text-white/20 group-hover:text-white/30 transition-colors" />
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-20 px-4 bg-gradient-to-b from-white to-gray-50">
-        <div className="container mx-auto max-w-6xl">
+      {/* Features Section */}
+      <section className="py-32 relative z-10">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            transition={{ duration: 0.8 }}
+            className="text-center space-y-4 mb-24"
           >
-            <h2 className="text-4xl font-bold mb-4">Powerful Features</h2>
-            <p className="text-lg text-muted-foreground">Everything you need to create beautiful web pages</p>
+            <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              Powerful Features
+            </h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              Everything you need to create stunning web designs with ease
+            </p>
           </motion.div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                icon: Paintbrush,
-                title: "Visual Editing",
-                description: "Effortless drag-and-drop editing with real-time preview."
+                icon: MousePointer2,
+                title: "Drag & Drop Interface",
+                description: "Intuitive drag-and-drop functionality for effortless design creation",
+                gradient: "from-purple-500/20 to-purple-600/20"
+              },
+              {
+                icon: Sparkles,
+                title: "Real-Time Preview",
+                description: "See your changes instantly as you make them",
+                gradient: "from-cyan-500/20 to-cyan-600/20"
               },
               {
                 icon: Code,
-                title: "Real-time Code View",
-                description: "See your HTML code update instantly as you make visual changes."
+                title: "Clean Code Export",
+                description: "Generate production-ready HTML code automatically",
+                gradient: "from-purple-500/20 to-purple-600/20"
               },
               {
                 icon: Layers,
                 title: "Component Library",
-                description: "Access a rich library of pre-built components to speed up development."
+                description: "Pre-built components to speed up your workflow",
+                gradient: "from-cyan-500/20 to-cyan-600/20"
               },
               {
-                icon: Upload,
-                title: "Import HTML",
-                description: "Import existing HTML files and continue editing visually."
+                icon: Box,
+                title: "Responsive Design",
+                description: "Create layouts that work perfectly on all devices",
+                gradient: "from-purple-500/20 to-purple-600/20"
               },
               {
-                icon: Download,
-                title: "Export Code",
-                description: "Export your design as clean, production-ready HTML code."
-              },
-              {
-                icon: LayoutGrid,
-                title: "Responsive Preview",
-                description: "Preview and optimize your design across all devices."
+                icon: GanttChart,
+                title: "Advanced Grid System",
+                description: "Powerful grid controls for pixel-perfect layouts",
+                gradient: "from-cyan-500/20 to-cyan-600/20"
               }
             ].map((feature, index) => (
               <motion.div
-                key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all hover:scale-105"
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                key={index}
+                className="group relative"
               >
-                <feature.icon className="h-12 w-12 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
+                <div className={`absolute inset-0 bg-gradient-to-br ${feature.gradient} rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <div className="relative h-full p-8 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm hover:border-white/20 transition-colors">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="p-3 bg-white/5 rounded-xl">
+                      <feature.icon className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-white">
+                      {feature.title}
+                    </h3>
+                  </div>
+                  <p className="text-white/60">
+                    {feature.description}
+                  </p>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
+      {/* Workflow Section */}
+      <section className="py-32 relative z-10">
+        <div className="container mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            transition={{ duration: 0.8 }}
+            className="text-center space-y-4 mb-24"
           >
-            <h2 className="text-4xl font-bold mb-4">Why Choose Us</h2>
-            <p className="text-lg text-muted-foreground">Designed for both beginners and professionals</p>
+            <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              Streamlined Workflow
+            </h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto">
+              Design, edit, and export with unprecedented ease
+            </p>
           </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+          <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                icon: Clock,
-                title: "Faster Workflow",
-                description: "Complete projects in a fraction of the time with our intuitive interface."
+                step: "01",
+                title: "Design",
+                description: "Start with our intuitive visual editor",
+                icon: Paintbrush
               },
               {
-                icon: Users,
-                title: "For Everyone",
-                description: "Beginner-friendly yet powerful enough for experienced developers."
+                step: "02",
+                title: "Preview",
+                description: "Test your design across all devices",
+                icon: Monitor
               },
               {
-                icon: Sparkles,
-                title: "Modern & Lightweight",
-                description: "Built with the latest web technologies for optimal performance."
+                step: "03",
+                title: "Export",
+                description: "Generate clean, optimized code",
+                icon: GitBranch
               }
-            ].map((benefit, index) => (
+            ].map((item, index) => (
               <motion.div
-                key={index}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="text-center p-6"
+                transition={{ duration: 0.5, delay: index * 0.2 }}
+                key={index}
+                className="relative group"
               >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-6">
-                  <benefit.icon className="h-8 w-8 text-primary" />
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-cyan-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="relative p-8 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-sm">
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="text-4xl font-bold text-white/20">{item.step}</span>
+                    <item.icon className="w-8 h-8 text-purple-400" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mb-2">{item.title}</h3>
+                  <p className="text-white/60">{item.description}</p>
                 </div>
-                <h3 className="text-xl font-semibold mb-3">{benefit.title}</h3>
-                <p className="text-muted-foreground">{benefit.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-4xl">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl font-bold mb-4">What Users Say</h2>
-            <p className="text-lg text-muted-foreground">Join thousands of satisfied users</p>
-          </motion.div>
-          <div className="relative h-[200px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTestimonial}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.5 }}
-                className="absolute inset-0"
-              >
-                <div className="text-center">
-                  <div className="flex justify-center mb-6">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-5 h-5 text-yellow-400" fill="currentColor" />
-                    ))}
-                  </div>
-                  <p className="text-xl mb-6 italic">"{testimonials[currentTestimonial].quote}"</p>
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                      {testimonials[currentTestimonial].avatar}
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold">{testimonials[currentTestimonial].name}</div>
-                      <div className="text-sm text-muted-foreground">{testimonials[currentTestimonial].role}</div>
-                    </div>
-                  </div>
+      {/* Call-to-Action */}
+      <section className="py-32 relative z-10">
+        <div className="container mx-auto px-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl" />
+            <div className="relative bg-black/50 border border-white/10 rounded-3xl backdrop-blur-sm p-12 lg:p-24 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent)]" />
+              <div className="relative max-w-4xl mx-auto text-center space-y-8">
+                <h2 className="text-4xl lg:text-6xl font-bold">
+                  Start Creating{" "}
+                  <span className="bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+                    Today
+                  </span>
+                </h2>
+                <p className="text-xl text-white/70">
+                  Join thousands of developers who are already using Visual HTML Editor to streamline their workflow
+                </p>
+                <div className="flex flex-wrap justify-center gap-4">
+                  <Link href="/editor">
+                    <a className="px-8 py-4 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-xl text-black font-semibold text-lg inline-flex items-center gap-2 transition-all hover:scale-105">
+                      Launch Editor <ArrowRight className="w-5 h-5" />
+                    </a>
+                  </Link>
                 </div>
-              </motion.div>
-            </AnimatePresence>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-2xl p-12 text-center"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Start Creating Your Web Pages Today
-            </h2>
-            <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto">
-              Jump right in and experience the power of visual HTML editing. No account required.
-            </p>
-            <Link href="/editor">
-              <a className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary rounded-md hover:bg-gray-50 transition-colors text-lg font-medium group">
-                Open Editor 
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Link>
-          </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-12">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <PenTool className="h-6 w-6 text-primary" />
-                <span className="font-semibold text-xl">Visual HTML Editor</span>
+      <footer className="py-12 border-t border-white/10">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Laptop className="h-6 w-6 text-purple-400" />
+                <span className="font-bold text-lg">Visual HTML Editor</span>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Built with modern web technologies for an optimal editing experience.
+              <p className="text-white/60 text-sm">
+                The next generation HTML editor for modern web development
               </p>
             </div>
-            <div>
-              <h4 className="font-semibold mb-4">Features</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Visual Editing</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Real-time Preview</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Code Export</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Component Library</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Documentation</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Tutorials</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Blog</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">GitHub</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Twitter</a></li>
-                <li><a href="#" className="text-muted-foreground hover:text-primary transition-colors">Discord</a></li>
-              </ul>
-            </div>
+            {[
+              {
+                title: "Product",
+                links: ["Features", "Workflow", "Pricing", "Documentation"]
+              },
+              {
+                title: "Company",
+                links: ["About", "Blog", "Careers", "Contact"]
+              },
+              {
+                title: "Legal",
+                links: ["Privacy", "Terms", "Security"]
+              }
+            ].map((column, index) => (
+              <div key={index} className="space-y-4">
+                <h4 className="font-semibold text-white">{column.title}</h4>
+                <ul className="space-y-2">
+                  {column.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <a href="#" className="text-white/60 hover:text-white transition-colors">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
+          <div className="mt-12 pt-8 border-t border-white/10 text-center text-white/40">
             <p>&copy; {new Date().getFullYear()} Visual HTML Editor. All rights reserved.</p>
           </div>
         </div>
