@@ -10,6 +10,7 @@ import {
   Redo,
   Code,
   Copy,
+  X,
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import {
