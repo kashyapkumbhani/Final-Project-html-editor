@@ -219,50 +219,56 @@ export function Toolbar({
         <Code className="h-4 w-4" />
       </Button>
 
-      <Dialog open={showHtml} onOpenChange={setShowHtml}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle>HTML Code</DialogTitle>
-          </DialogHeader>
-          <div className="relative overflow-hidden">
-            <div className="relative">
-              <div className="overflow-auto max-h-[60vh] bg-muted rounded-lg">
-                <pre className="p-6 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
-                  {html
-                    .split('>')
-                    .join('>\n')
-                    .split('<')
-                    .join('\n<')
-                    .split('\n')
-                    .filter(line => line.trim())
-                    .map(line => '  '.repeat(
-                      (line.match(/^[\s]*</g) || [''])[0].length / 2
-                    ) + line.trim())
-                    .join('\n')
-                  }
-                </pre>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="absolute top-4 right-4 gap-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-                onClick={() => {
-                  navigator.clipboard.writeText(html).then(() => {
-                    toast({
-                      title: "Copied!",
-                      description: "HTML code copied to clipboard",
-                      duration: 2000,
-                    });
-                  });
-                }}
-              >
-                <Copy className="h-4 w-4" />
-                Copy Code
+      {showHtml && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="relative w-full max-w-4xl max-h-[80vh] bg-background border rounded-lg shadow-lg">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-lg font-semibold">HTML Code</h2>
+              <Button variant="ghost" size="icon" onClick={() => setShowHtml(false)}>
+                <X className="h-4 w-4" />
               </Button>
             </div>
+            <div className="relative p-4">
+              <div className="relative">
+                <div className="overflow-auto max-h-[60vh] bg-muted rounded-lg">
+                  <pre className="p-6 text-sm font-mono leading-relaxed overflow-x-auto whitespace-pre">
+                    {html
+                      .split('>')
+                      .join('>\n')
+                      .split('<')
+                      .join('\n<')
+                      .split('\n')
+                      .filter(line => line.trim())
+                      .map(line => '  '.repeat(
+                        (line.match(/^[\s]*</g) || [''])[0].length / 2
+                      ) + line.trim())
+                      .join('\n')
+                    }
+                  </pre>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="absolute top-4 right-4 gap-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+                  onClick={() => {
+                    navigator.clipboard.writeText(html).then(() => {
+                      toast({
+                        title: "Copied!",
+                        description: "HTML code copied to clipboard",
+                        duration: 2000,
+                        className: "bg-green-500 border-green-600 text-white",
+                      });
+                    });
+                  }}
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy Code
+                </Button>
+              </div>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 }
