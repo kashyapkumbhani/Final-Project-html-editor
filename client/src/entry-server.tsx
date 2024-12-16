@@ -1,33 +1,45 @@
 import * as React from 'react';
 import ReactDOMServer from 'react-dom/server';
-import { Router, BaseLocationHook } from 'wouter';
+import { Router } from 'wouter';
 import App from './App';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { queryClient } from './lib/queryClient';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-// Create a static location hook for SSR
-const staticLocationHook: BaseLocationHook = () => {
-  return ["/", () => {}]; // Simplified hook for SSR
+// Static location hook for SSR
+const staticLocationHook = () => {
+  return ["/", () => {}];
 };
 
 export function render(url: string) {
-  // Create a new instance of QueryClient for each request
-  const ssrQueryClient = new QueryClientProvider({ client: queryClient });
+  // Create a new QueryClient instance for each request
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        staleTime: Infinity,
+      },
+    },
+  });
   
   // Render app to string
   const appHtml = ReactDOMServer.renderToString(
-    React.createElement(Router, { hook: staticLocationHook },
-      React.createElement(QueryClientProvider, { client: queryClient },
-        React.createElement(DndProvider, { backend: HTML5Backend },
-          React.createElement(App)
-        )
-      )
-    )
+    <Router hook={staticLocationHook}>
+      <QueryClientProvider client={queryClient}>
+        <DndProvider backend={HTML5Backend}>
+          <App />
+        </DndProvider>
+      </QueryClientProvider>
+    </Router>
   );
 
-  // Generate the full HTML document with SEO optimizations
+  // Dehydrate the cache
+  const dehydratedState = JSON.stringify(queryClient.getQueryCache().getAll().map(query => ({
+    queryKey: query.queryKey,
+    data: query.state.data
+  })));
+
+  // Generate the full HTML document
   const html = `<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -38,10 +50,11 @@ export function render(url: string) {
         ${extractCriticalCss()}
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <script>
-          // Hydration fix: Remove SSR styles after hydration
-          window.addEventListener('load', () => {
-            document.documentElement.classList.add('client');
-          });
+          window.__REACT_QUERY_STATE__ = ${dehydratedState};
+          // Initialize theme
+          const theme = localStorage.getItem('theme') || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.classList.add(theme);
         </script>
       </head>
       <body>
